@@ -51,11 +51,11 @@ export const processStoredData = (aBufferToProcess: BufferObject, messageHandler
       // Reserving some Space
       const aMessage: Buffer = Buffer.alloc(CRLFPos);
       // Reserving some Space for the Rest of the Message
-      const aTail: Buffer = Buffer.alloc(aBufferToProcess.buffer.length - CRLFPos - 2);
+      const aTail: Buffer = Buffer.alloc(aBufferToProcess.buffer.length - CRLFPos - CRLF.length);
       // Extracting the message
       aBufferToProcess.buffer.copy(aMessage, 0, 0, CRLFPos);
       // Saving the rest of the message
-      aBufferToProcess.buffer.copy(aTail, 0, CRLFPos + 2, aBufferToProcess.buffer.length);
+      aBufferToProcess.buffer.copy(aTail, 0, CRLFPos + CRLF.length, aBufferToProcess.buffer.length);
       // shortening the Raw Buffer
       aBufferToProcess.buffer = aTail;
       CRLFPos = aBufferToProcess.buffer.indexOf(CRLF);
@@ -63,6 +63,17 @@ export const processStoredData = (aBufferToProcess: BufferObject, messageHandler
       if (messageHandler != null && typeof messageHandler === "function") messageHandler(aMessage);
     }
   }
+};
+
+// check if the port is already in use
+export const isPortInUse = async (portToCheck: number): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.listen(portToCheck, () => {
+      server.close(() => resolve(false));
+    });
+    server.on("error", () => resolve(true));
+  });
 };
 
 export const now = (): string => {

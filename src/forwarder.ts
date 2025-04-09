@@ -33,6 +33,14 @@ class MyLapsForwarder extends BaseClass {
     this._server = this._configureReceiverSocket(listenPort, justLocalHost ? "127.0.0.1" : "0.0.0.0");
   }
 
+  lastReveivedMessages = (socketId: string): Array<string> => {
+    const socket = this._connections.get(socketId);
+    if (socket != null) {
+      return socket.lastReceivedMessages;
+    }
+    return [];
+  };
+
   _configureReceiverSocket = (listenPort: number, bindAddress: string): net.Server => {
     const server = net.createServer(this._onNewConnection as (socket: net.Socket) => void);
     server.listen({ host: bindAddress, port: listenPort }, () => {
@@ -54,13 +62,15 @@ class MyLapsForwarder extends BaseClass {
     socket.cache = {
       lastTime: Date.now(),
       buffer: Buffer.alloc(0),
-      name: `ChronoTrackInputAdapter.ClienttSocket[${socket.id}].cache`,
+      name: `MyLapsInputAdapter.ClienttSocket[${socket.id}].cache`,
     };
     socket.keepAliveTimerHandle = null;
     socket.triggerStartTransmissionHandle = null;
+    socket.lastReceivedMessages = [];
 
     this._connections.set(socket.id, socket); // The server knows its sockets
 
+    // scope is socket
     socket.on("error", (error: Error) => {
       if (error != null) {
         log(`${this.className}Socket.onError: ${error} ${error.stack}`);
@@ -70,6 +80,7 @@ class MyLapsForwarder extends BaseClass {
       }
     });
 
+    // Scope is MyLapsForwarder
     socket.on("end", () => {
       log(`${this.className}Socket.onEnd`);
       clearIntervalTimer(socket.keepAliveTimerHandle);
@@ -88,12 +99,14 @@ class MyLapsForwarder extends BaseClass {
       }
     });
 
+    // Scope is Socket
     socket.sendFrame = function (text: String) {
-      socket.write(text + CRLF);
+      log(`Socket.sendFrame`, text);
+      return socket.write(text + CRLF);
     };
 
     socket.sendData = function (data: Array<String>) {
-      socket.sendFrame(data.join(MyLapsDataSeparator) + MyLapsDataSeparator);
+      return socket.sendFrame(data.join(MyLapsDataSeparator) + MyLapsDataSeparator);
     };
 
     socket.sendObject = function (object: Record<string, string>) {
@@ -118,6 +131,13 @@ class MyLapsForwarder extends BaseClass {
       try {
         logToFileSystem(rawMessage);
         log(`${this.className}._handleMessage.rawMessage: ${rawMessage}`);
+
+        socket.lastReceivedMessages.push(rawMessage.toString());
+        // limit the number of messages to 100
+        if (socket.lastReceivedMessages.length > 100) {
+          socket.lastReceivedMessages.shift();
+        }
+
         const separated = rawMessage.toString().split(MyLapsDataSeparator);
         if (separated.length > 0) {
           if (!socket.identified) {
@@ -145,8 +165,8 @@ class MyLapsForwarder extends BaseClass {
       };
 
       refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPong, "@Version2.1"]);
-      refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetLocations]);
       refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetInfo]);
+      refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetLocations]);
     } else {
       warn(`${this.className}._handleWelcomeMessage`, "Unknown welcome message.", parts);
     }
@@ -161,20 +181,42 @@ class MyLapsForwarder extends BaseClass {
         const myLapsFunction = parts[1];
         switch (myLapsFunction) {
           case MyLapsFunctions.Pong: {
-            refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPong]);
+            const replied = refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPong]);
             const locationName = parts[0];
             if (refToSocket.meta.sources[locationName] != null) {
               refToSocket.meta.sources[locationName].lastSeen = new Date();
             }
+            info(`${this.className}._handleMessages Pong received from client and ${replied ? "answered" : "not answered"}.`);
+            break;
+          }
+
+          // ALocationName@AckPong@$
+          case MyLapsFunctions.AckPong: {
+            const locationName = parts[0];
+            if (refToSocket.meta.sources[locationName] != null) {
+              refToSocket.meta.sources[locationName].lastSeen = new Date();
+            }
+            info(`${this.className}._handleMessages`, "AckPong received from client.");
             break;
           }
 
           case MyLapsFunctions.Ping: {
-            refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPing]);
+            const replied = refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPing]);
             const locationName = parts[0];
             if (refToSocket.meta.sources[locationName] != null) {
               refToSocket.meta.sources[locationName].lastSeen = new Date();
             }
+            info(`${this.className}._handleMessages Ping received from client and ${replied ? "answered" : "not answered"}.`);
+            break;
+          }
+
+          // ALocationName@AckPing@$
+          case MyLapsFunctions.AckPing: {
+            const locationName = parts[0];
+            if (refToSocket.meta.sources[locationName] != null) {
+              refToSocket.meta.sources[locationName].lastSeen = new Date();
+            }
+            info(`${this.className}._handleMessages`, "AckPing received from client.");
             break;
           }
 
@@ -194,11 +236,12 @@ class MyLapsForwarder extends BaseClass {
                 warn(`${this.className}._handleMessages`, "Unknown location parameter", location);
               }
             }
+            success(`${this.className}._handleMessages`, "Answer to GetLocations message received: ", Object.keys(refToSocket.meta.sources));
             break;
           }
 
           case MyLapsFunctions.AckGetInfo: {
-            if (len === 5) {
+            if (len > 4) {
               const locationName = parts[0];
               const deviceName = parts[2];
               const computerName = parts[4];
@@ -208,8 +251,9 @@ class MyLapsForwarder extends BaseClass {
                 computerName,
                 lastSeen: new Date(),
               };
+              success(`${this.className}._handleMessages`, "AckGetInfo message received: ", locationName, deviceName, computerName);
             } else {
-              warn(`${this.className}._handleMessages`, "AckGetInfo message with wrong part length received", parts);
+              warn(`${this.className}._handleMessages`, "AckGetInfo message with wrong part length received", parts.length, parts);
             }
             break;
           }

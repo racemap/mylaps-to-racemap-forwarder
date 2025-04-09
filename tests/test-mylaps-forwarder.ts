@@ -1,9 +1,9 @@
 import moment from "moment";
 import MyLapsForwarder from "../src/forwarder";
 import { serial as test } from "ava";
-import { connectTcpSocket, processStoredData, shortIdBuilder, sleep, storeIncomingRawData } from "../src/functions";
+import { connectTcpSocket, isPortInUse, processStoredData, shortIdBuilder, sleep, storeIncomingRawData } from "../src/functions";
 import { TPredictionTestTimes, TTestFixtures, TTestState } from "../src/types";
-import { CRLF, MyLapsDataSeparator, MyLapsFunctions } from "../src/consts";
+import { CRLF, MyLapsDataSeparator, MyLapsFunctions, MyLapsIdentifiers } from "../src/consts";
 
 const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST ?? "https://racemap.com";
 const RACEMAP_API_TOKEN = process.env.RACEMAP_API_TOKEN ?? "";
@@ -78,7 +78,7 @@ const fixtures: TTestFixtures = {
 const state: TTestState = {
   aTCPClient: null,
   forwarder: null,
-  serverMessages: [],
+  fromServerMessages: [],
   socketCache: {
     lastTime: 0,
     buffer: Buffer.alloc(0),
@@ -92,8 +92,13 @@ test("Ava is running, fixtures and state exists", async (t) => {
 });
 
 test("Try to spin up an instance of the mylaps forwarder", async (t) => {
-  state.forwarder = new MyLapsForwarder(RACEMAP_API_TOKEN, LISTEN_PORT);
-  t.not(state.forwarder, null, "instance of MyLapsForwarder is not null");
+  if (await isPortInUse(LISTEN_PORT)) {
+    t.log(`Port ${LISTEN_PORT} is already in use. We do not have to spin a server.`);
+    t.pass();
+  } else {
+    state.forwarder = new MyLapsForwarder(RACEMAP_API_TOKEN, LISTEN_PORT);
+    t.not(state.forwarder, null, "instance of MyLapsForwarder is not null");
+  }
 });
 
 test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) => {
@@ -101,12 +106,18 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
   t.not(state.aTCPClient, null, "tcp client should be not null but is");
   if (state.aTCPClient != null) {
     state.aTCPClient.sendFrame = (text: String) => {
-      state.aTCPClient?.write(`${text}${CRLF}`);
+      if (state.aTCPClient != null) {
+        return state.aTCPClient.write(`${text}${CRLF}`);
+      }
+      return false;
     };
 
     state.aTCPClient.sendData = (data: Array<String>) => {
       const dataStr = data.join(MyLapsDataSeparator);
-      state.aTCPClient?.sendFrame(`${dataStr}${MyLapsDataSeparator}`);
+      if (state.aTCPClient != null) {
+        return state.aTCPClient.sendFrame(`${dataStr}${MyLapsDataSeparator}`);
+      }
+      return false;
     };
 
     state.aTCPClient.on("connect", () => {
@@ -118,11 +129,12 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
       processStoredData(state.socketCache, (message) => {
         if (state.aTCPClient == null) return;
         const messageStr = message.toString();
-        state.serverMessages.push(messageStr);
+        state.fromServerMessages.push(messageStr);
         const parts = messageStr.split(MyLapsDataSeparator);
         const len = parts.length;
         if (len > 2) {
-          const myLabsFunction = parts[0];
+          const serverName = parts[0];
+          const myLabsFunction = parts[1];
 
           switch (myLabsFunction) {
             case MyLapsFunctions.Pong: {
@@ -137,10 +149,22 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
               break;
             }
 
+            case MyLapsFunctions.GetLocations: {
+              console.log("GetLocations from server => GetLocations");
+              const data = [fixtures.clientName, MyLapsFunctions.GetLocations];
+              fixtures.sources.forEach((source) => {
+                data.push(`${MyLapsIdentifiers.LocationParameters.LocationName}=${source.name}`);
+              });
+              state.aTCPClient?.sendData(data);
+              break;
+            }
+
             case MyLapsFunctions.GetInfo: {
+              console.log("GetInfo from server => AckGetInfo");
               fixtures.sources.forEach((source) => {
                 state.aTCPClient?.sendData([source.name, MyLapsFunctions.AckGetInfo, source.deviceName, "Unknown", source.computerName]);
               });
+              break;
             }
 
             default: {
@@ -164,14 +188,22 @@ test("should send the welcome message through the socket", async (t) => {
 });
 
 test("the server should have responded with AckPong and GetLocations and GetInfo", async (t) => {
-  t.log("server messages", state.serverMessages);
+  t.log("server messages", state.fromServerMessages);
 
-  t.not(state.serverMessages, null, "server messages should not be null");
-  t.true(state.serverMessages.length > 0, "server messages should have some content");
-  const ackPong = state.serverMessages.find((message) => message.includes(MyLapsFunctions.AckPong));
-  const ackGetInfo = state.serverMessages.find((message) => message.includes(MyLapsFunctions.AckGetInfo));
-  const getLocations = state.serverMessages.find((message) => message.includes(MyLapsFunctions.GetLocations));
+  t.not(state.fromServerMessages, null, "server messages should not be null");
+  t.true(state.fromServerMessages.length > 0, "server messages should have some content");
+  const ackPong = state.fromServerMessages.find((message) => message.includes(MyLapsFunctions.AckPong));
+  const getLocations = state.fromServerMessages.find((message) => message.includes(MyLapsFunctions.GetLocations));
+  const getInfo = state.fromServerMessages.find((message) => message.includes(MyLapsFunctions.GetInfo));
+
   t.not(ackPong, undefined, "server should have responded with AckPong");
   t.not(getLocations, undefined, "server should have responded with GetLocations");
-  t.not(ackGetInfo, undefined, "server should have responded with AckGetInfo");
+  t.not(getInfo, undefined, "server should have responded with GetInfo");
+});
+
+test("should wait 20 seconds before kill", async (t) => {
+  t.timeout(30000);
+  t.log("Waiting 20 seconds before kill");
+  await sleep(20000);
+  t.pass();
 });

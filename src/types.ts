@@ -51,7 +51,7 @@ export type TState = {
     buffer: Buffer;
   };
   connectedClients: Array<MyLapsDevice>;
-  chronoTimingReads: Array<StoredTimingRead>;
+  myLapsTimingReads: Array<StoredTimingRead>;
 };
 
 export type ExtendedSocket = net.Socket & {
@@ -65,9 +65,10 @@ export type ExtendedSocket = net.Socket & {
   keepAliveTimerHandle: NodeJS.Timeout | null;
   triggerStartTransmissionHandle: NodeJS.Timeout | null;
   sendKeepAlivePing: () => void;
-  sendFrame: (text: string) => void;
-  sendData: (data: Array<String>) => void;
+  sendFrame: (text: string) => boolean;
+  sendData: (data: Array<String>) => boolean;
   sendObject: (object: Record<string, string>) => void;
+  lastReceivedMessages: Array<string>;
 };
 
 export type MessageParts = Array<string>;
@@ -81,7 +82,7 @@ export type TPredictionTestTimes = {
 };
 
 export type TTestFixtures = {
-  is: string;
+  id: string;
   clientName: string;
   sources: Array<MyLapsSource>;
 };
@@ -89,7 +90,7 @@ export type TTestFixtures = {
 export type TTestState = {
   aTCPClient: ExtendedSocket | null;
   forwarder: MyLapsForwarder | null;
-  serverMessages: Array<any>;
+  fromServerMessages: Array<any>;
   socketCache: {
     lastTime: number;
     buffer: Buffer;
