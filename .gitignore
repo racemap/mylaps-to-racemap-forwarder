@@ -1,4 +1,10 @@
+# Builded stuff
+.bin
+.build
+.yarn
+
 # Logs
+
 logs
 *.log
 npm-debug.log*
