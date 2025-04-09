@@ -43,6 +43,55 @@ export type MyLapsDevice = {
   openedAt: string;
 };
 
+export type MyLapsPassing = {
+  chipCode?: string;
+  chipType?: string;
+  date?: string;
+  lapNumber?: string;
+  deviceNumber?: string;
+  readerNumber?: string;
+  antennaNumber?: string;
+  groupId?: string;
+  bibNumber?: string;
+  bibText?: string;
+  time?: string;
+  unixTime?: string;
+  utcTime?: string;
+  hitCount?: string;
+  timeSource?: string;
+  batchId?: string;
+  amplitude?: string;
+  amplitudeDbm?: string;
+  macAddress?: string;
+  strongestAntenna?: string;
+  averageAntenna?: string;
+};
+
+export type MyLapsPassingKeys = keyof MyLapsPassing;
+
+export type MyLapsPassingShortKeys =
+  | "c"
+  | "ct"
+  | "d"
+  | "l"
+  | "dv"
+  | "re"
+  | "an"
+  | "g"
+  | "b"
+  | "n"
+  | "t"
+  | "ut"
+  | "utc"
+  | "h"
+  | "ts"
+  | "bid"
+  | "am"
+  | "amd"
+  | "dm"
+  | "ans"
+  | "ana";
+
 export type TState = {
   aTCPClient: net.Socket | null;
   forwarder: MyLapsForwarder | null;

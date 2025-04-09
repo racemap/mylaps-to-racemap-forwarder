@@ -177,6 +177,11 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
               break;
             }
 
+            case MyLapsFunctions.AckPong: {
+              t.log("AckPong from server. Nice.");
+              break;
+            }
+
             case MyLapsFunctions.AckPassing: {
               t.log("AckPassing from server. Nice.");
               break;
@@ -245,6 +250,18 @@ test("it should be possible to send 3 passings for every source to the server", 
       t.true(state.aTCPClient.sendData(passings), "it should be possible to write a passings message to the socket");
     }
     await sleep(500);
+  }
+});
+
+test("the server should have responded with AckPassing for every passing", async (t) => {
+  t.log("server messages", state.fromServerMessages);
+  t.not(state.fromServerMessages, null, "server messages should not be null");
+  t.true(state.fromServerMessages.length > 0, "server messages should have some content");
+  const ackPassing = state.fromServerMessages.filter((message) => message.includes(MyLapsFunctions.AckPassing));
+  t.is(ackPassing.length, state.passingAttempts.length, "server should have responded with AckPassing for every passing");
+  for (const attempt of state.passingAttempts) {
+    const ack = ackPassing.find((message) => message.includes(attempt));
+    t.not(ack, undefined, `server should have responded with AckPassing for attempt ${attempt}`);
   }
 });
 

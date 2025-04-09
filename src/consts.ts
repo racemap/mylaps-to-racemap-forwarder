@@ -48,7 +48,31 @@ export const MyLapsIdentifiers = {
     StrongestAntenna: "ans", // Strongest antenna id (BibTag): 1
     AverageAntenna: "ana", // Average antenna (BibTag): 1.7
   },
-  DeviceParameters: {},
+  DeviceParameters: {
+    DeviceId: "id", // Unique id assigned to the device by Timing&Scoring: 1, 3
+    DeviceName: "n", // Name of the device: BibTag-0345, Finish Backup
+    DeviceType: "dt", // Type of device: ChampionChip Portable Decoder, Decoder, ChampionChip Scanner, ChampionChip Ear 1, ChampionChip Ear 2
+    DeviceNumber: "nr", // Number assigned to the device by the timer: 1, 5
+    DeviceMac: "mac", // MAC address of the device: 0030568F2CE, no-mac
+    BatteryLevel: "bat", // Battery level indicator
+    TimeBetweenSameChip: "tbsc", // Time between same chip detection
+    Profile: "prof", // Device profile (e.g., Main, Backup)
+    AntennaCount: "ant", // Number of antennas connected
+    FirmwareVersion: "fwv", // Firmware version of the device
+    BeeperVolume: "bvol", // Volume of the beeper
+    BeepType: "btyp", // Beep type: 0=continuous, 1=single
+    ContinuousMode: "cont", // Indicates if Continuous Mode is enabled
+    GunHoldoff: "gho", // Gun holdoff in milliseconds: 0, 50, n.a.
+    Ext1Holdoff: "ex1ho", // Ext1 holdoff: 0, 50, n.a.
+    Ext2Holdoff: "ex2ho", // Ext2 holdoff: 0, 50, n.a.
+    Temperature: "temp", // Temperature in Celsius: 0, 30, n.a.
+    DaylightSavingsTime: "dst", // DST enabled or not: true, false, n.a.
+    GPSSatelliteCount: "gpsc", // Number of GPS satellites: 6, n.a.
+    GPSLongitude: "gpsx", // Longitude value: 12.0432, n.a.
+    GPSLatitude: "gpsy", // Latitude value: 30.1123, n.a.
+    Timezone: "tz", // Timezone offset from GMT in minutes: -720, 300, 720, n.a.
+    // ... to be continued
+  },
   LocationParameters: {
     LocationName: "ln", // Name of the location as it is written in Timing & Scoring: Start, Finish, 5K
   },

@@ -3,9 +3,9 @@ import net from "node:net";
 import shortId from "shortid";
 import APIClient from "./api-client";
 import { BaseClass } from "./base-class";
-import type { ExtendedSocket, MessageParts, TimingRead } from "./types";
+import type { ExtendedSocket, MessageParts, MyLapsPassing, MyLapsPassingShortKeys, TimingRead } from "./types";
 import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, RacemapMyLapsServerName } from "./consts";
-import { log, info, warn, error, success, processStoredData, storeIncomingRawData } from "./functions";
+import { log, info, warn, error, success, processStoredData, storeIncomingRawData, myLapsPassingKeyToName, myLapsPassingToRead } from "./functions";
 
 const MAX_MESSAGE_DATA_DELAY_IN_MS = 500;
 
@@ -273,26 +273,19 @@ class MyLapsForwarder extends BaseClass {
                 for (let i = 2; i < len - 2; i++) {
                   const passingDetails = parts[i].split("|");
 
-                  const read: TimingRead = {
-                    timestamp: "",
-                    chipId: "",
-                    timingId: "",
-                    timingName: locationName,
-                  };
+                  const passing: MyLapsPassing = {};
 
                   for (const detail of passingDetails) {
                     const [key, value] = detail.split("=");
-                    if (key === MyLapsIdentifiers.PassingParameters.ChipCode) {
-                      read.chipId = value;
-                    }
-                    if (key === MyLapsIdentifiers.PassingParameters.ReaderNumber) {
-                      read.timingId = value;
-                    }
-                    if (key === MyLapsIdentifiers.PassingParameters.Time) {
-                      read.timestamp = value;
-                    }
+                    passing[myLapsPassingKeyToName(key as MyLapsPassingShortKeys)] = value;
+                    // parse all stuff into an reverse object
                   }
-                  reads.push(read);
+                  const read = myLapsPassingToRead(locationName, locationName, passing);
+                  if (read != null) {
+                    reads.push(read);
+                  } else {
+                    warn(`${this.className}._handleMessages`, "Passing message with missing keys received:", passing);
+                  }
                 }
                 refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPassing, counter.toString()]);
               }
@@ -318,13 +311,14 @@ class MyLapsForwarder extends BaseClass {
     }
   };
 
-  async _pushNonlocatedReadToRacemap(TimingRead: Array<TimingRead>): Promise<void> {
-    // log("tryToPushNonlocatedReadToRacemap", TimingRead);
-    const response = await this._apiClient.sendTimingReadsAsJSON(TimingRead);
+  async _pushNonlocatedReadToRacemap(timingReads: Array<TimingRead>): Promise<void> {
+    // log("tryToPushNonlocatedReadToRacemap", timingReads);
+    const response = await this._apiClient.sendTimingReadsAsJSON(timingReads);
     if (response.status === 200) {
-      success("tryToPushNonlocatedReadToRacemap", TimingRead);
+      success("tryToPushNonlocatedReadToRacemap", timingReads);
     } else {
       warn("tryToPushNonlocatedReadToRacemap", response.status);
+      warn(`|-> reads:${JSON.stringify(timingReads)}`);
     }
   }
 }

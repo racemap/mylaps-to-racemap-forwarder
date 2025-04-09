@@ -8,7 +8,8 @@
 import net from "node:net";
 import { Buffer } from "node:buffer";
 import { CRLF } from "./consts";
-import type { ExtendedSocket } from "./types";
+import type { ExtendedSocket, MyLapsPassing, MyLapsPassingKeys, MyLapsPassingShortKeys, TimingRead } from "./types";
+import moment from "moment";
 
 type TArgs = Array<unknown>;
 
@@ -147,3 +148,66 @@ export const printEnvVar = (envVar: { [name: string]: unknown }, isPublic = true
   }
   console.log(now(), "Log:", `    |-> \x1b[35m${name}\x1b[0m: \x1b[36m${value || "???"}\x1b[0m`);
 };
+
+export function myLapsPassingToRead(timingId: string, timingName: string, passing: MyLapsPassing): TimingRead | null {
+  if (passing.chipCode != null && passing.time != null && passing.date != null) {
+    return {
+      timingId,
+      timingName,
+      chipId: passing.chipCode,
+      timestamp: moment(`${passing.date}_${passing.time}`, "YYMMDD_HH:mm:ss.SSS").toISOString(),
+    };
+  }
+  return null;
+}
+
+export function myLapsPassingKeyToName(key: MyLapsPassingShortKeys): MyLapsPassingKeys {
+  switch (key) {
+    case "c":
+      return "chipCode";
+    case "ct":
+      return "chipType";
+    case "d":
+      return "date";
+    case "l":
+      return "lapNumber";
+    case "dv":
+      return "deviceNumber";
+    case "re":
+      return "readerNumber";
+    case "an":
+      return "antennaNumber";
+    case "g":
+      return "groupId";
+    case "b":
+      return "bibNumber";
+    case "n":
+      return "bibText";
+    case "t":
+      return "time";
+    case "ut":
+      return "unixTime";
+    case "utc":
+      return "utcTime";
+    case "h":
+      return "hitCount";
+    case "ts":
+      return "timeSource";
+    case "bid":
+      return "batchId";
+    case "am":
+      return "amplitude";
+    case "amd":
+      return "amplitudeDbm";
+    case "dm":
+      return "macAddress";
+    case "ans":
+      return "strongestAntenna";
+    case "ana":
+      return "averageAntenna";
+
+    default:
+      console.warn("Unknown key:", key);
+  }
+  return key;
+}
