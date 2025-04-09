@@ -26,6 +26,7 @@ export type MyLapsSource = {
   deviceName: string;
   computerName: string;
   lastSeen?: Date | null; // last time the source was seen
+  startTimeStamp?: number; // timestamp of the source
 };
 
 export type MyLapsClientMetadata = {
@@ -84,6 +85,7 @@ export type TPredictionTestTimes = {
 export type TTestFixtures = {
   id: string;
   clientName: string;
+  trasnponderIds: Array<string>;
   sources: Array<MyLapsSource>;
 };
 
@@ -95,4 +97,5 @@ export type TTestState = {
     lastTime: number;
     buffer: Buffer;
   };
+  passingAttempts: Array<string>;
 };

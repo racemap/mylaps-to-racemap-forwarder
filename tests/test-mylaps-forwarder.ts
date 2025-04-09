@@ -2,7 +2,7 @@ import moment from "moment";
 import MyLapsForwarder from "../src/forwarder";
 import { serial as test } from "ava";
 import { sleep, isPortInUse, shortIdBuilder, connectTcpSocket, processStoredData, storeIncomingRawData } from "../src/functions";
-import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator } from "../src/consts";
+import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, OneHourInMillis, OneSecondInMillis } from "../src/consts";
 import type { TPredictionTestTimes, TTestFixtures, TTestState } from "../src/types";
 
 const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST ?? "https://racemap.com";
@@ -16,61 +16,70 @@ const shortId001 = shortIdBuilder();
 const times: TPredictionTestTimes = {
   testStartTime: moment().utc().toDate(),
   testStartTimeMinus60Seconds: moment().utc().add(-60, "seconds").toDate(),
-  startTime: moment().utc().subtract(2, "h").toISOString(),
+  startTime: moment().utc().subtract(1, "h").toISOString(),
   endTime: moment().utc().toISOString(),
 };
 
 const fixtures: TTestFixtures = {
   id: shortId001,
   clientName: "RMMyLabsTestClient",
+  trasnponderIds: ["0000041", "0000042", "0000043"],
   sources: [
     {
       name: "Start",
       deviceName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_0`,
+      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((0 * OneHourInMillis) / 7),
     },
     {
       name: "1k",
       deviceName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_1`,
+      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((1 * OneHourInMillis) / 7),
     },
     {
       name: "2k",
       deviceName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_2`,
+      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((2 * OneHourInMillis) / 7),
     },
     {
       name: "3k",
       deviceName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_3`,
+      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((3 * OneHourInMillis) / 7),
     },
     {
       name: "5k",
       deviceName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_4`,
+      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((4 * OneHourInMillis) / 7),
     },
     {
       name: "8k",
       deviceName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_5`,
+      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((5 * OneHourInMillis) / 7),
     },
     {
       name: "9k",
       deviceName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_6`,
+      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((6 * OneHourInMillis) / 7),
     },
     {
       name: "Finish",
       deviceName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_7`,
+      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((7 * OneHourInMillis) / 7),
     },
   ],
 };
@@ -83,6 +92,7 @@ const state: TTestState = {
     lastTime: 0,
     buffer: Buffer.alloc(0),
   },
+  passingAttempts: [],
 };
 
 test("Ava is running, fixtures and state exists", async (t) => {
@@ -121,7 +131,7 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
     };
 
     state.aTCPClient.on("connect", () => {
-      console.log("Connected to the server");
+      t.log("Connected to the server");
     });
 
     state.aTCPClient.on("data", (data: Buffer) => {
@@ -138,19 +148,19 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
 
           switch (myLabsFunction) {
             case MyLapsFunctions.Pong: {
-              console.log("Pong from server => AckPong");
+              t.log("Pong from server => AckPong");
               state.aTCPClient.sendData([fixtures.clientName, MyLapsFunctions.AckPong]);
               break;
             }
 
             case MyLapsFunctions.Ping: {
-              console.log("Ping from server => AckPing");
+              t.log("Ping from server => AckPing");
               state.aTCPClient.sendData([fixtures.clientName, MyLapsFunctions.AckPing]);
               break;
             }
 
             case MyLapsFunctions.GetLocations: {
-              console.log("GetLocations from server => GetLocations");
+              t.log("GetLocations from server => GetLocations");
               const data = [fixtures.clientName, MyLapsFunctions.GetLocations];
               for (const source of fixtures.sources) {
                 data.push(`${MyLapsIdentifiers.LocationParameters.LocationName}=${source.name}`);
@@ -160,10 +170,15 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
             }
 
             case MyLapsFunctions.GetInfo: {
-              console.log("GetInfo from server => AckGetInfo");
+              t.log("GetInfo from server => AckGetInfo");
               for (const source of fixtures.sources) {
                 state.aTCPClient?.sendData([source.name, MyLapsFunctions.AckGetInfo, source.deviceName, "Unknown", source.computerName]);
               }
+              break;
+            }
+
+            case MyLapsFunctions.AckPassing: {
+              t.log("AckPassing from server. Nice.");
               break;
             }
 
@@ -201,7 +216,37 @@ test("the server should have responded with AckPong and GetLocations and GetInfo
   t.not(getInfo, undefined, "server should have responded with GetInfo");
 });
 
-test("it should be possible to send some passings to the server", async (t) => {});
+test("it should be possible to send 3 passings for every source to the server", async (t) => {
+  t.not(state.aTCPClient, null, "tcp client is not null");
+  if (state.aTCPClient != null) {
+    // for every source we define 3 passings
+    for (const source of fixtures.sources) {
+      const Attempt = Math.round(100 * Math.random()).toString();
+      const passings = [source.name, MyLapsFunctions.Passing];
+      for (let i = 0; i < 3; i++) {
+        if (source.startTimeStamp != null) {
+          const passing = [
+            `${MyLapsIdentifiers.PassingParameters.Time}=${moment(source.startTimeStamp + i * OneSecondInMillis).format("HH:mm:ss.SSS")}`,
+            `${MyLapsIdentifiers.PassingParameters.ChipCode}=${fixtures.trasnponderIds[i]}`,
+            `${MyLapsIdentifiers.PassingParameters.ChipType}=UH`,
+            `${MyLapsIdentifiers.PassingParameters.Date}=${moment(source.startTimeStamp + i * OneSecondInMillis).format("YYMMDD")}`,
+            `${MyLapsIdentifiers.PassingParameters.LapNumber}=1`,
+            `${MyLapsIdentifiers.PassingParameters.DeviceNumber}=4`,
+            `${MyLapsIdentifiers.PassingParameters.ReaderNumber}=1`,
+            `${MyLapsIdentifiers.PassingParameters.AntennaNumber}=00001101`,
+            `${MyLapsIdentifiers.PassingParameters.GroupId}=0`,
+            `${MyLapsIdentifiers.PassingParameters.BibNumber}=1`,
+          ];
+          passings.push(passing.join("|"));
+        }
+      }
+      passings.push(Attempt);
+      state.passingAttempts.push(Attempt);
+      t.true(state.aTCPClient.sendData(passings), "it should be possible to write a passings message to the socket");
+    }
+    await sleep(500);
+  }
+});
 
 test("should wait 20 seconds before kill", async (t) => {
   t.timeout(30000);
