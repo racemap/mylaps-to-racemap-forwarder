@@ -2,10 +2,10 @@ import fs from "node:fs";
 import net from "node:net";
 import shortId from "shortid";
 import APIClient from "./api-client";
-import { ExtendedSocket, MessageParts, TimingRead } from "./types";
 import { BaseClass } from "./base-class";
-import { CRLF, MyLapsDataSeparator, MyLapsFunctions, MyLapsIdentifiers, RacemapMyLapsServerName } from "./consts";
-import { error, info, log, processStoredData, storeIncomingRawData, success, warn } from "./functions";
+import type { ExtendedSocket, MessageParts, TimingRead } from "./types";
+import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, RacemapMyLapsServerName } from "./consts";
+import { log, info, warn, error, success, processStoredData, storeIncomingRawData } from "./functions";
 
 const MAX_MESSAGE_DATA_DELAY_IN_MS = 500;
 
@@ -99,23 +99,20 @@ class MyLapsForwarder extends BaseClass {
       }
     });
 
-    // Scope is Socket
-    socket.sendFrame = function (text: String) {
-      log(`Socket.sendFrame`, text);
+    socket.sendFrame = (text: string) => {
+      log("Socket.sendFrame", text);
       return socket.write(text + CRLF);
     };
 
-    socket.sendData = function (data: Array<String>) {
-      return socket.sendFrame(data.join(MyLapsDataSeparator) + MyLapsDataSeparator);
-    };
+    socket.sendData = (data: Array<string>) => socket.sendFrame(data.join(MyLapsDataSeparator) + MyLapsDataSeparator);
 
-    socket.sendObject = function (object: Record<string, string>) {
+    socket.sendObject = (object: Record<string, string>) => {
       for (const [key, value] of Object.entries(object)) {
         socket.sendFrame(`${key}=${value}`);
       }
     };
 
-    socket.sendKeepAlivePing = function () {
+    socket.sendKeepAlivePing = () => {
       // old version says you should send Pong
       // version 2.1 says you should send Ping
       socket.sendData([RacemapMyLapsServerName, MyLapsFunctions.Ping]);

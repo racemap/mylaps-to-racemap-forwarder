@@ -1,5 +1,5 @@
-import net from "node:net";
-import MyLapsForwarder from "./forwarder";
+import type net from "node:net";
+import type MyLapsForwarder from "./forwarder";
 
 export type MyLapsClientVersions = "v1.0" | "v2.1";
 
@@ -45,7 +45,7 @@ export type MyLapsDevice = {
 export type TState = {
   aTCPClient: net.Socket | null;
   forwarder: MyLapsForwarder | null;
-  mylapsServerMessages: Array<any>;
+  mylapsServerMessages: Array<string>;
   mylapsSocketCache: {
     lastTime: number;
     buffer: Buffer;
@@ -66,7 +66,7 @@ export type ExtendedSocket = net.Socket & {
   triggerStartTransmissionHandle: NodeJS.Timeout | null;
   sendKeepAlivePing: () => void;
   sendFrame: (text: string) => boolean;
-  sendData: (data: Array<String>) => boolean;
+  sendData: (data: Array<string>) => boolean;
   sendObject: (object: Record<string, string>) => void;
   lastReceivedMessages: Array<string>;
 };
@@ -90,7 +90,7 @@ export type TTestFixtures = {
 export type TTestState = {
   aTCPClient: ExtendedSocket | null;
   forwarder: MyLapsForwarder | null;
-  fromServerMessages: Array<any>;
+  fromServerMessages: Array<string>;
   socketCache: {
     lastTime: number;
     buffer: Buffer;

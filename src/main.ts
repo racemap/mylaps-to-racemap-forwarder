@@ -28,15 +28,15 @@ async function main() {
       - The token should look like this: RACEMAP_API_TOKEN=your-api-token
       - You can get your api token from your racemap account profile section.`);
   }
-  success(`|-> Users api token is availible`);
+  success("|-> Users api token is availible");
   info("Try to check validyty of your API Token, sending an empty dataset.");
 
   const isAvail = await apiClient.checkAvailibility();
   if (isAvail.status === 200) {
-    success(`|-> API Token is valid`);
+    success("|-> API Token is valid");
     new MyLapsForwarder(RACEMAP_API_TOKEN, LISTEN_PORT, LISTEN_MODE === "private");
   } else {
-    throw new Error(`API Token is invalid. Please check your token and try again.`);
+    throw new Error("API Token is invalid. Please check your token and try again.");
   }
 }
 

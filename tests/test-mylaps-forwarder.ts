@@ -1,9 +1,9 @@
 import moment from "moment";
 import MyLapsForwarder from "../src/forwarder";
 import { serial as test } from "ava";
-import { connectTcpSocket, isPortInUse, processStoredData, shortIdBuilder, sleep, storeIncomingRawData } from "../src/functions";
-import { TPredictionTestTimes, TTestFixtures, TTestState } from "../src/types";
-import { CRLF, MyLapsDataSeparator, MyLapsFunctions, MyLapsIdentifiers } from "../src/consts";
+import { sleep, isPortInUse, shortIdBuilder, connectTcpSocket, processStoredData, storeIncomingRawData } from "../src/functions";
+import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator } from "../src/consts";
+import type { TPredictionTestTimes, TTestFixtures, TTestState } from "../src/types";
 
 const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST ?? "https://racemap.com";
 const RACEMAP_API_TOKEN = process.env.RACEMAP_API_TOKEN ?? "";
@@ -105,14 +105,14 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
   state.aTCPClient = await connectTcpSocket(forwarderIPAddress, LISTEN_PORT);
   t.not(state.aTCPClient, null, "tcp client should be not null but is");
   if (state.aTCPClient != null) {
-    state.aTCPClient.sendFrame = (text: String) => {
+    state.aTCPClient.sendFrame = (text: string) => {
       if (state.aTCPClient != null) {
         return state.aTCPClient.write(`${text}${CRLF}`);
       }
       return false;
     };
 
-    state.aTCPClient.sendData = (data: Array<String>) => {
+    state.aTCPClient.sendData = (data: Array<string>) => {
       const dataStr = data.join(MyLapsDataSeparator);
       if (state.aTCPClient != null) {
         return state.aTCPClient.sendFrame(`${dataStr}${MyLapsDataSeparator}`);
@@ -152,18 +152,18 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
             case MyLapsFunctions.GetLocations: {
               console.log("GetLocations from server => GetLocations");
               const data = [fixtures.clientName, MyLapsFunctions.GetLocations];
-              fixtures.sources.forEach((source) => {
+              for (const source of fixtures.sources) {
                 data.push(`${MyLapsIdentifiers.LocationParameters.LocationName}=${source.name}`);
-              });
+              }
               state.aTCPClient?.sendData(data);
               break;
             }
 
             case MyLapsFunctions.GetInfo: {
               console.log("GetInfo from server => AckGetInfo");
-              fixtures.sources.forEach((source) => {
+              for (const source of fixtures.sources) {
                 state.aTCPClient?.sendData([source.name, MyLapsFunctions.AckGetInfo, source.deviceName, "Unknown", source.computerName]);
-              });
+              }
               break;
             }
 
@@ -200,6 +200,8 @@ test("the server should have responded with AckPong and GetLocations and GetInfo
   t.not(getLocations, undefined, "server should have responded with GetLocations");
   t.not(getInfo, undefined, "server should have responded with GetInfo");
 });
+
+test("it should be possible to send some passings to the server", async (t) => {});
 
 test("should wait 20 seconds before kill", async (t) => {
   t.timeout(30000);

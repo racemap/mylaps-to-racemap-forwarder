@@ -1,5 +1,5 @@
 import withQuery from "with-query";
-import { StoredTimingRead, TimingRead } from "./types";
+import type { StoredTimingRead, TimingRead } from "./types";
 
 const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST || "https://racemap.com";
 
@@ -21,7 +21,9 @@ class APIClient {
   }
 
   async _getJSON(path: string): Promise<any> {
-    const res = await this._fetch(path, { headers: { Accept: "application/json" } });
+    const res = await this._fetch(path, {
+      headers: { Accept: "application/json" },
+    });
     return res.json();
   }
 

@@ -15,7 +15,9 @@ export class BaseClass {
   }
 
   _bind(arrayOfMethodNamesToBind: Array<string>): void {
-    arrayOfMethodNamesToBind.forEach((method) => this._doBind(method as keyof BaseClass));
+    for (const method of arrayOfMethodNamesToBind) {
+      this._doBind(method as keyof BaseClass);
+    }
   }
 
   _doBind(method: keyof BaseClass): void {
@@ -29,9 +31,9 @@ export class BaseClass {
 
   buildMethodFreeVersionOfYou(): Record<string, unknown> {
     const properties: Array<string> = [];
-    Object.keys(this).forEach((property) => {
+    for (const property of Object.keys(this)) {
       if (this._propertyIsNotOfTypeFunction(property as keyof BaseClass)) properties.push(property);
-    });
+    }
     return _pick(this, properties);
   }
 

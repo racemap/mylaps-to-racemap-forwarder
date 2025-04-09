@@ -8,7 +8,7 @@
 import net from "node:net";
 import { Buffer } from "node:buffer";
 import { CRLF } from "./consts";
-import { ExtendedSocket } from "./types";
+import type { ExtendedSocket } from "./types";
 
 type TArgs = Array<unknown>;
 
@@ -80,23 +80,23 @@ export const now = (): string => {
   return new Date().toISOString().split("T")[1].split("Z")[0];
 };
 
-export let log = (...args: TArgs): void => {
+export const log = (...args: TArgs): void => {
   console.log(now(), "Log:    ", ...args);
 };
 
-export let info = (...args: TArgs): void => {
+export const info = (...args: TArgs): void => {
   console.log(now(), "Info:   \x1b[34m", ...args, "\x1b[0m");
 };
 
-export let warn = (...args: TArgs): void => {
+export const warn = (...args: TArgs): void => {
   console.log(now(), "Warning:\x1b[91m", ...args, "\x1b[0m");
 };
 
-export let error = (...args: TArgs): void => {
+export const error = (...args: TArgs): void => {
   console.log(now(), "Error:  \x1b[31m", ...args, "\x1b[0m");
 };
 
-export let success = (...args: TArgs): void => {
+export const success = (...args: TArgs): void => {
   console.log(now(), "Success:\x1b[32m", ...args, "\x1b[0m");
 };
 
