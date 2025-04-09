@@ -8,6 +8,7 @@
 import net from "node:net";
 import { Buffer } from "node:buffer";
 import { CRLF } from "./consts";
+import { ExtendedSocket } from "./types";
 
 type TArgs = Array<unknown>;
 
@@ -88,12 +89,12 @@ export let success = (...args: TArgs): void => {
   console.log(now(), "Success:\x1b[32m", ...args, "\x1b[0m");
 };
 
-export function connectTcpSocket(ip: string, port: number): Promise<net.Socket> {
+export function connectTcpSocket(ip: string, port: number): Promise<ExtendedSocket> {
   return new Promise((resolve, reject) => {
     try {
       const tcpClient = new net.Socket();
       tcpClient.connect(port, ip, () => {
-        resolve(tcpClient);
+        resolve(tcpClient as ExtendedSocket);
       });
     } catch (err) {
       reject(err);

@@ -20,10 +20,12 @@ export type StoredTimingRead = TimingRead & {
 // this can be obtained by calling the getInfo function with the test prefix
 // => Send("Test@GetInfo@$")
 export type MyLapsSource = {
+  id?: string; // id of the source
+  mac?: string; // MAC address of the source
   name: string;
   deviceName: string;
   computerName: string;
-  lastSeen: Date | null; // last time the source was seen
+  lastSeen?: Date | null; // last time the source was seen
 };
 
 export type MyLapsClientMetadata = {
@@ -78,8 +80,18 @@ export type TPredictionTestTimes = {
   endTime: string;
 };
 
-export type TTestFixtures = {};
+export type TTestFixtures = {
+  is: string;
+  clientName: string;
+  sources: Array<MyLapsSource>;
+};
 
 export type TTestState = {
+  aTCPClient: ExtendedSocket | null;
   forwarder: MyLapsForwarder | null;
+  serverMessages: Array<any>;
+  socketCache: {
+    lastTime: number;
+    buffer: Buffer;
+  };
 };
