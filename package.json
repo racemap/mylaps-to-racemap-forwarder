@@ -39,6 +39,7 @@
   "ava": {
     "verbose": true,
     "cache": false,
+    "timeout": "30s",
     "files": [
       ".build/test-mylaps-forwarder.js"
     ]

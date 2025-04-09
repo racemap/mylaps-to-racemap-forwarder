@@ -165,8 +165,8 @@ class MyLapsForwarder extends BaseClass {
       };
 
       refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPong, "@Version2.1"]);
-      refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetInfo]);
       refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetLocations]);
+      refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetInfo]);
     } else {
       warn(`${this.className}._handleWelcomeMessage`, "Unknown welcome message.", parts);
     }
@@ -222,7 +222,7 @@ class MyLapsForwarder extends BaseClass {
 
           case MyLapsFunctions.GetLocations: {
             refToSocket.meta.name = parts[0];
-            for (let i = 2; i < len; i++) {
+            for (let i = 2; i < len - 1; i++) {
               const location = parts[i].split("=");
               if (location.length === 2 && location[0] === MyLapsIdentifiers.LocationParameters.LocationName) {
                 const locationName = location[1];
@@ -236,7 +236,11 @@ class MyLapsForwarder extends BaseClass {
                 warn(`${this.className}._handleMessages`, "Unknown location parameter", location);
               }
             }
-            success(`${this.className}._handleMessages`, "Answer to GetLocations message received: ", Object.keys(refToSocket.meta.sources));
+            success(
+              `${this.className}._handleMessages`,
+              "Answer to GetLocations message received: ",
+              Object.keys(refToSocket.meta.sources).join(", "),
+            );
             break;
           }
 
