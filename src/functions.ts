@@ -149,13 +149,51 @@ export const printEnvVar = (envVar: { [name: string]: unknown }, isPublic = true
   console.log(now(), "Log:", `    |-> \x1b[35m${name}\x1b[0m: \x1b[36m${value || "???"}\x1b[0m`);
 };
 
-export function myLapsPassingToRead(timingId: string, timingName: string, passing: MyLapsPassing): TimingRead | null {
+//                                                            |> checksum
+// Where one passing is: KV8658316:13:57.417 3 0F  1000025030870
+//                       |      |            | |        |> date
+//                       |      |            | |> readerNumber
+//                       |      |> Time      |>  deviceNumber
+//                       |> Transponder Id
+export function myLapsLagacyPassingToRead(locationName: string, passingDetails: string): TimingRead | null {
+  const passing = passingDetails.trim();
+  if (passing.length > 38) {
+    // transponderId is the first 7 chars of passingDetails i.e. KV86583
+    const transponderId = passingDetails.substring(0, 7);
+    // time is the next 12 chars of passingDetails i.e. 16:13:57.417
+    const time = passingDetails.substring(7, 19);
+    // date is the from len - 8 until len - 2 chars i.e. 250308
+    const date = passingDetails.substring(passingDetails.length - 8, passingDetails.length - 2);
+
+    const read: TimingRead = {
+      timingId: locationName,
+      timingName: locationName,
+      timestamp: moment.utc(`${date} ${time}`, "YYMMDD hh:mm:ss.SSS").toISOString(),
+      chipId: transponderId,
+    };
+    return read;
+  }
+  return null;
+}
+
+// reads stuff like this
+// t=13:11:30.904|c=0000041|ct=UH|d=120606|l=13|dv=4|re=0|an=00001111|g=0|b=41|n=41
+export function myLapsPassingToRead(timingId: string, timingName: string, passingAsString: string): TimingRead | null {
+  const passingDetails = passingAsString.split("|");
+
+  const passing: MyLapsPassing = {};
+
+  for (const detail of passingDetails) {
+    const [key, value] = detail.split("=");
+    passing[myLapsPassingKeyToName(key as MyLapsPassingShortKeys)] = value;
+  }
+
   if (passing.chipCode != null && passing.time != null && passing.date != null) {
     return {
       timingId,
       timingName,
       chipId: passing.chipCode,
-      timestamp: moment(`${passing.date}_${passing.time}`, "YYMMDD_HH:mm:ss.SSS").toISOString(),
+      timestamp: moment.utc(`${passing.date}_${passing.time}`, "YYMMDD_hh:mm:ss.SSS").toISOString(),
     };
   }
   return null;

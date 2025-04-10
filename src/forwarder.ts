@@ -5,7 +5,19 @@ import APIClient from "./api-client";
 import { BaseClass } from "./base-class";
 import type { ExtendedSocket, MessageParts, MyLapsPassing, MyLapsPassingShortKeys, TimingRead } from "./types";
 import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, RacemapMyLapsServerName } from "./consts";
-import { log, info, warn, error, success, processStoredData, storeIncomingRawData, myLapsPassingKeyToName, myLapsPassingToRead } from "./functions";
+import {
+  log,
+  info,
+  warn,
+  error,
+  success,
+  processStoredData,
+  storeIncomingRawData,
+  myLapsPassingKeyToName,
+  myLapsPassingToRead,
+  myLapsLagacyPassingToRead,
+} from "./functions";
+import moment from "moment";
 
 const MAX_MESSAGE_DATA_DELAY_IN_MS = 500;
 
@@ -271,16 +283,7 @@ class MyLapsForwarder extends BaseClass {
               const counter = Number.parseInt(parts[len - 2]);
               if (counter > 0) {
                 for (let i = 2; i < len - 2; i++) {
-                  const passingDetails = parts[i].split("|");
-
-                  const passing: MyLapsPassing = {};
-
-                  for (const detail of passingDetails) {
-                    const [key, value] = detail.split("=");
-                    passing[myLapsPassingKeyToName(key as MyLapsPassingShortKeys)] = value;
-                    // parse all stuff into an reverse object
-                  }
-                  const read = myLapsPassingToRead(locationName, locationName, passing);
+                  const read = myLapsPassingToRead(locationName, locationName, parts[i]);
                   if (read != null) {
                     reads.push(read);
                   } else {
@@ -294,6 +297,37 @@ class MyLapsForwarder extends BaseClass {
               }
             }
 
+            if (refToSocket.meta.sources[locationName] != null) {
+              refToSocket.meta.sources[locationName].lastSeen = new Date();
+            }
+            break;
+          }
+
+          // Store Message from Client: MTB Split 4Km@Store@KV8658316:13:57.417 3 0F  1000025030870@TC3970116:14:00.638 3 0F  1000125030857@FL8964716:35:29.424 3 0F  1000225030868@LL0011316:35:34.379 3 0F  1000325030857@HK0540916:36:34.249 3 0F  100042503085D@FX0918916:38:30.970 3 0F  1000525030871@FC3719516:39:00.729 3 0F  100062503085B@HN4126016:42:08.338 3 0F  100072503085B@LS1319316:43:55.826 3 0F  100082503086E@SF3671416:44:43.227 3 0F  1000925030866@FL8964716:50:41.667 3 0F  2000A25030878@LL0011316:50:42.206 3 0F  2000B25030858@HK0540916:52:47.756 3 0F  2000C25030872@FX0918916:56:34.182 3 0F  2000D25030880@FC3719516:57:54.971 3 0F  2000E25030873@LP9719617:22:09.556 3 0F  1000F25030885@SL3784517:22:34.554 3 0F  100102503086A@NL3771117:22:48.577 3 0F  1001125030868@GN8815417:22:48.936 3 0F  100122503086A@NH0186117:22:49.731 3 0F  100132503085C@HP6144617:23:34.483 3 0F  1001425030863@NT0248917:23:35.325 3 0F  100152503086C@SF6466217:23:35.847 3 0F  100162503086E@CS5806117:24:08.642 3 0F  1001725030862@PC8455717:24:18.934 3 0F  100182503086E@LW7969617:24:41.844 3 0F  1001925030883@TW5917117:24:55.618 3 0F  1001A25030889@VF3655317:25:02.357 3 0F  1001B25030873@SL4977017:25:03.582 3 0F  1001C2503087D@TN3909317:25:23.360 3 0F  1001D2503087A@2@
+          //                                                            |> checksum
+          // Where one passing is: KV8658316:13:57.417 3 0F  1000025030870
+          //                       |      |            | |        |> date
+          //                       |      |            | |> readerNumber
+          //                       |      |> Time      |>  deviceNumber
+          //                       |> Transponder Id
+          case MyLapsFunctions.Store: {
+            const locationName = parts[0];
+            if (len > 4) {
+              const reads: Array<TimingRead> = [];
+              const counter = Number.parseInt(parts[len - 2]);
+              if (counter > 0) {
+                for (let i = 2; i < len - 2; i++) {
+                  const read = myLapsLagacyPassingToRead(locationName, parts[i]);
+                  if (read != null) {
+                    reads.push(read);
+                  }
+                }
+              }
+              if (reads.length > 0) {
+                this._pushNonlocatedReadToRacemap(reads);
+              }
+              refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckStore, counter.toString()]);
+            }
             if (refToSocket.meta.sources[locationName] != null) {
               refToSocket.meta.sources[locationName].lastSeen = new Date();
             }

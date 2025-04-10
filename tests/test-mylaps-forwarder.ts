@@ -1,9 +1,18 @@
 import moment from "moment";
 import MyLapsForwarder from "../src/forwarder";
 import { serial as test } from "ava";
-import { sleep, isPortInUse, shortIdBuilder, connectTcpSocket, processStoredData, storeIncomingRawData } from "../src/functions";
 import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, OneHourInMillis, OneSecondInMillis } from "../src/consts";
 import type { TPredictionTestTimes, TTestFixtures, TTestState } from "../src/types";
+import {
+  sleep,
+  isPortInUse,
+  shortIdBuilder,
+  connectTcpSocket,
+  processStoredData,
+  storeIncomingRawData,
+  myLapsLagacyPassingToRead,
+  myLapsPassingToRead,
+} from "../src/functions";
 
 const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST ?? "https://racemap.com";
 const RACEMAP_API_TOKEN = process.env.RACEMAP_API_TOKEN ?? "";
@@ -82,6 +91,8 @@ const fixtures: TTestFixtures = {
       startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((7 * OneHourInMillis) / 7),
     },
   ],
+  passingString: "t=13:11:30.904|c=0000041|ct=UH|d=120606|l=13|dv=4|re=0|an=00001111|g=0|b=41|n=41",
+  legacyPassingString: "KV8658316:13:57.417 3 0F  1000025030870",
 };
 
 const state: TTestState = {
@@ -99,6 +110,26 @@ test("Ava is running, fixtures and state exists", async (t) => {
   t.is(true, true);
   t.not(fixtures, null);
   t.not(state, null);
+});
+
+test("Test function myLapsLagacyPassingToRead", (t) => {
+  const read = myLapsLagacyPassingToRead("Start", fixtures.legacyPassingString);
+  console.log(read);
+  t.not(read, null, "read should not be null");
+  t.is(read?.chipId, "KV86583", "chipId should be KV86583");
+  t.is(read?.timingId, "Start", "timingId should be Start");
+  t.is(read?.timingName, "Start", "timingName should be Start");
+  t.is(read?.timestamp, "2025-03-08T16:13:57.417Z", "timestamp should be 2025-03-08T16:13:57.417Z");
+});
+
+test("Test function myLapsPassingToRead", (t) => {
+  const read = myLapsPassingToRead("Start001", "Start", fixtures.passingString);
+  console.log(read);
+  t.not(read, null, "read should not be null");
+  t.is(read?.chipId, "0000041", "chipId should be 0000041");
+  t.is(read?.timingId, "Start001", "timingId should be Start001");
+  t.is(read?.timingName, "Start", "timingName should be Start");
+  t.is(read?.timestamp, "2012-06-06T13:11:30.904Z", "timestamp should be 2012-06-06T13:11:30.904Z");
 });
 
 test("Try to spin up an instance of the mylaps forwarder", async (t) => {

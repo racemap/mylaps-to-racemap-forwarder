@@ -136,6 +136,8 @@ export type TTestFixtures = {
   clientName: string;
   trasnponderIds: Array<string>;
   sources: Array<MyLapsSource>;
+  passingString: string;
+  legacyPassingString: string;
 };
 
 export type TTestState = {

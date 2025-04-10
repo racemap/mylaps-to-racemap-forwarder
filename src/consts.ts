@@ -4,14 +4,15 @@ export const OneSecondInMillis = 1000; // 1 second in milliseconds
 
 export const MyLapsFunctions = {
   Pong: "Pong",
-  Ping: "Ping",
-  Store: "Store",
-  AckPing: "AckPing",
   AckPong: "AckPong",
+  Ping: "Ping",
+  AckPing: "AckPing",
+  Store: "Store",
+  AckStore: "AckStore",
   GetInfo: "GetInfo",
+  AckGetInfo: "AckGetInfo",
   Passing: "Passing",
   AckPassing: "AckPassing",
-  AckGetInfo: "AckGetInfo",
   GetLocations: "GetLocations",
 };
 
