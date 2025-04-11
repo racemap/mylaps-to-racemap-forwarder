@@ -27,12 +27,22 @@ You can download the latest binary for your platform from the here and run it wi
 
 #### Windows
 
-```cmd
+Keep in mind the application is a cli program, so you need to run it from the command line.
+
+1. Press `Windows + R` and type `cmd` to open the command line
+2. Navigate to the folder where you downloaded the binary
+3. Run the binary with the API token as an environment variable
+
+Please make shure that you excute the binary from a folder with write access, otherwise the application will not be able to create the log file.
+
+You could also add the following lines to a start.bat file and run it from there. Then you can double click the start.bat file to run the service.
+
+```bat
 set RACEMAP_API_TOKEN=your-api-token
-.\mylaps-to-racemap-forwarder.exe
+mylaps-to-racemap-forwarder.exe
 ```
 
-![image](https://github.com/user-attachments/assets/1d16ec20-4b79-4207-bccc-f7196a679809_0)
+After a successful start you should see the following output in the command line:
 
 #### Linux
 
