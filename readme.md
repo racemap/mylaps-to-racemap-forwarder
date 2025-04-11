@@ -44,6 +44,9 @@ mylaps-to-racemap-forwarder.exe
 
 After a successful start you should see the following output in the command line:
 
+![image](https://github.com/user-attachments/assets/893a0d7e-af4d-400b-a9fc-5a515fedd329)
+
+
 #### Linux
 
 ```bash
