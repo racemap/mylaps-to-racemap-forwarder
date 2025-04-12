@@ -4,7 +4,7 @@ import shortId from "shortid";
 import APIClient from "./api-client";
 import { BaseClass } from "./base-class";
 import { MyLapsToRacemapForwarderVersion } from "./version";
-import type { ExtendedSocket, MessageParts, TimingRead } from "./types";
+import type { DeviceUpdate, ExtendedSocket, LocationUpdate, MessageParts, MyLapsDevice, MyLapsLocation, TimingRead } from "./types";
 import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, RacemapMyLapsServerName } from "./consts";
 import {
   log,
@@ -81,7 +81,7 @@ class MyLapsForwarder extends BaseClass {
 
     this._connections.set(socket.id, socket); // The server knows its sockets
 
-    // scope is socket
+    // scope is MyLapsForwarder
     socket.on("error", (error: Error) => {
       if (error != null) {
         log(`${this.className}Socket.onError: ${error} ${error.stack}`);
@@ -169,7 +169,7 @@ class MyLapsForwarder extends BaseClass {
         name: "",
         version: "v2.1",
         connectionId: undefined,
-        sources: {},
+        locations: {},
         clientRespondedAt: new Date(),
       };
 
@@ -178,6 +178,51 @@ class MyLapsForwarder extends BaseClass {
       refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetInfo]);
     } else {
       warn(`${this.className}._handleWelcomeMessage`, "Unknown welcome message.", parts);
+    }
+  };
+
+  _createOrUpdateDevice = (location: MyLapsLocation, deviceUpdate: DeviceUpdate): void => {
+    let device: MyLapsDevice = location.devicesByName[deviceUpdate.deviceName];
+    if (device == null) {
+      device = {
+        name: deviceUpdate.deviceName,
+        mac: deviceUpdate.mac,
+      };
+      location.devicesByName[deviceUpdate.deviceName] = device;
+    } else {
+      if (deviceUpdate.mac != null) {
+        device.mac = deviceUpdate.mac;
+      }
+    }
+  };
+
+  _createOrUpdateLocation = (refToSocket: ExtendedSocket, update: LocationUpdate): void => {
+    let location = refToSocket.meta.locations[update.locationName];
+    if (location == null) {
+      success(`${this.className}._createOrUpdateLocation`, "New location detected: ", update.locationName);
+      location = {
+        name: update.locationName,
+        computerName: update.computerName ? update.computerName : "",
+        devicesByName: {},
+        lastSeen: new Date(),
+      };
+      refToSocket.meta.locations[update.locationName] = location;
+      // if we get a new source we ask the client for the connected hardware => readers and so
+      refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetInfo, update.locationName]);
+    } else {
+      location.lastSeen = new Date();
+      if (update.computerName != null) {
+        location.computerName = update.computerName;
+      }
+    }
+    if (update.deviceUpdate != null) {
+      const deviceName = update.deviceUpdate.deviceName;
+      if (deviceName != null) {
+        location.devicesByName[deviceName] = {
+          name: deviceName,
+          mac: update.deviceUpdate.mac,
+        };
+      }
     }
   };
 
@@ -192,9 +237,7 @@ class MyLapsForwarder extends BaseClass {
           case MyLapsFunctions.Pong: {
             const replied = refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPong]);
             const locationName = parts[0];
-            if (refToSocket.meta.sources[locationName] != null) {
-              refToSocket.meta.sources[locationName].lastSeen = new Date();
-            }
+            this._createOrUpdateLocation(refToSocket, { locationName });
             info(`${this.className}._handleMessages Pong received from client and ${replied ? "answered" : "not answered"}.`);
             break;
           }
@@ -202,9 +245,7 @@ class MyLapsForwarder extends BaseClass {
           // ALocationName@AckPong@$
           case MyLapsFunctions.AckPong: {
             const locationName = parts[0];
-            if (refToSocket.meta.sources[locationName] != null) {
-              refToSocket.meta.sources[locationName].lastSeen = new Date();
-            }
+            this._createOrUpdateLocation(refToSocket, { locationName });
             info(`${this.className}._handleMessages`, "AckPong received from client.");
             break;
           }
@@ -212,9 +253,7 @@ class MyLapsForwarder extends BaseClass {
           case MyLapsFunctions.Ping: {
             const replied = refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPing]);
             const locationName = parts[0];
-            if (refToSocket.meta.sources[locationName] != null) {
-              refToSocket.meta.sources[locationName].lastSeen = new Date();
-            }
+            this._createOrUpdateLocation(refToSocket, { locationName });
             info(`${this.className}._handleMessages Ping received from client and ${replied ? "answered" : "not answered"}.`);
             break;
           }
@@ -222,9 +261,7 @@ class MyLapsForwarder extends BaseClass {
           // ALocationName@AckPing@$
           case MyLapsFunctions.AckPing: {
             const locationName = parts[0];
-            if (refToSocket.meta.sources[locationName] != null) {
-              refToSocket.meta.sources[locationName].lastSeen = new Date();
-            }
+            this._createOrUpdateLocation(refToSocket, { locationName });
             info(`${this.className}._handleMessages`, "AckPing received from client.");
             break;
           }
@@ -235,12 +272,7 @@ class MyLapsForwarder extends BaseClass {
               const location = parts[i].split("=");
               if (location.length === 2 && location[0] === MyLapsIdentifiers.LocationParameters.LocationName) {
                 const locationName = location[1];
-                refToSocket.meta.sources[locationName] = {
-                  name: locationName,
-                  deviceName: "",
-                  computerName: "",
-                  lastSeen: null,
-                };
+                this._createOrUpdateLocation(refToSocket, { locationName });
               } else {
                 warn(`${this.className}._handleMessages`, "Unknown location parameter", location);
               }
@@ -248,7 +280,7 @@ class MyLapsForwarder extends BaseClass {
             success(
               `${this.className}._handleMessages`,
               "Answer to GetLocations message received: ",
-              Object.keys(refToSocket.meta.sources).join(", "),
+              Object.keys(refToSocket.meta.locations).join(", "),
             );
             break;
           }
@@ -257,13 +289,15 @@ class MyLapsForwarder extends BaseClass {
             if (len > 4) {
               const locationName = parts[0];
               const deviceName = parts[2];
+              const unknown = parts[3];
               const computerName = parts[4];
-              refToSocket.meta.sources[locationName] = {
-                name: locationName,
-                deviceName,
+              this._createOrUpdateLocation(refToSocket, {
+                locationName,
                 computerName,
-                lastSeen: new Date(),
-              };
+                deviceUpdate: {
+                  deviceName,
+                },
+              });
               success(`${this.className}._handleMessages`, "AckGetInfo message received: ", locationName, deviceName, computerName);
             } else {
               warn(`${this.className}._handleMessages`, "AckGetInfo message with wrong part length received", parts.length, parts);
@@ -298,8 +332,8 @@ class MyLapsForwarder extends BaseClass {
               }
             }
 
-            if (refToSocket.meta.sources[locationName] != null) {
-              refToSocket.meta.sources[locationName].lastSeen = new Date();
+            if (refToSocket.meta.locations[locationName] != null) {
+              refToSocket.meta.locations[locationName].lastSeen = new Date();
             }
             break;
           }
@@ -329,8 +363,8 @@ class MyLapsForwarder extends BaseClass {
               }
               refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckStore, counter.toString()]);
             }
-            if (refToSocket.meta.sources[locationName] != null) {
-              refToSocket.meta.sources[locationName].lastSeen = new Date();
+            if (refToSocket.meta.locations[locationName] != null) {
+              refToSocket.meta.locations[locationName].lastSeen = new Date();
             }
             break;
           }

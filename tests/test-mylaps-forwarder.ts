@@ -33,7 +33,7 @@ const fixtures: TTestFixtures = {
   id: shortId001,
   clientName: "RMMyLabsTestClient",
   trasnponderIds: ["0000041", "0000042", "0000043"],
-  sources: [
+  locations: [
     {
       name: "Start",
       deviceName: `Dev_${shortIdBuilder()}`,
@@ -191,7 +191,7 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
             case MyLapsFunctions.GetLocations: {
               t.log("GetLocations from server => GetLocations");
               const data = [fixtures.clientName, MyLapsFunctions.GetLocations];
-              for (const source of fixtures.sources) {
+              for (const source of fixtures.locations) {
                 data.push(`${MyLapsIdentifiers.LocationParameters.LocationName}=${source.name}`);
               }
               state.aTCPClient?.sendData(data);
@@ -200,7 +200,7 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
 
             case MyLapsFunctions.GetInfo: {
               t.log("GetInfo from server => AckGetInfo");
-              for (const source of fixtures.sources) {
+              for (const source of fixtures.locations) {
                 state.aTCPClient?.sendData([source.name, MyLapsFunctions.AckGetInfo, source.deviceName, "Unknown", source.computerName]);
               }
               break;
@@ -254,7 +254,7 @@ test("it should be possible to send 3 passings for every source to the server", 
   t.not(state.aTCPClient, null, "tcp client is not null");
   if (state.aTCPClient != null) {
     // for every source we define 3 passings
-    for (const source of fixtures.sources) {
+    for (const source of fixtures.locations) {
       const Attempt = Math.round(100 * Math.random()).toString();
       const passings = [source.name, MyLapsFunctions.Passing];
       for (let i = 0; i < 3; i++) {

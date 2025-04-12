@@ -17,14 +17,30 @@ export type StoredTimingRead = TimingRead & {
   receivedAt: string;
 };
 
+export type LocationUpdate = {
+  locationName: string;
+  computerName?: string;
+  deviceUpdate?: DeviceUpdate;
+};
+
+export type DeviceUpdate = {
+  deviceName: string;
+  mac?: string;
+};
+
+export type MyLapsDevice = {
+  name: string;
+  mac?: string;
+};
+
 // this can be obtained by calling the getInfo function with the test prefix
 // => Send("Test@GetInfo@$")
-export type MyLapsSource = {
+export type MyLapsLocation = {
   id?: string; // id of the source
   mac?: string; // MAC address of the source
   name: string;
-  deviceName: string;
   computerName: string;
+  devicesByName: Record<string, MyLapsDevice>;
   lastSeen?: Date | null; // last time the source was seen
   startTimeStamp?: number; // timestamp of the source
 };
@@ -34,10 +50,10 @@ export type MyLapsClientMetadata = {
   version: MyLapsClientVersions; // version of the connected client
   clientRespondedAt: Date; // last time client responded to a ping request
   connectionId?: string;
-  sources: Record<string, MyLapsSource>; // list of connected MyLaps Readers/Hardware/Files
+  locations: Record<string, MyLapsLocation>; // list of connected MyLaps Readers/Hardware/Files
 };
 
-export type MyLapsDevice = {
+export type MyLapsClient = {
   id: string;
   meta: MyLapsClientMetadata;
   openedAt: string;
@@ -100,7 +116,7 @@ export type TState = {
     lastTime: number;
     buffer: Buffer;
   };
-  connectedClients: Array<MyLapsDevice>;
+  connectedClients: Array<MyLapsClient>;
   myLapsTimingReads: Array<StoredTimingRead>;
 };
 
@@ -135,7 +151,7 @@ export type TTestFixtures = {
   id: string;
   clientName: string;
   trasnponderIds: Array<string>;
-  sources: Array<MyLapsSource>;
+  locations: Array<MyLapsLocation>;
   passingString: string;
   legacyPassingString: string;
 };
