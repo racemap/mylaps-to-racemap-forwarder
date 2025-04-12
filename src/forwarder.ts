@@ -20,8 +20,8 @@ import {
 
 const MAX_MESSAGE_DATA_DELAY_IN_MS = 500;
 
-const logToFileSystem = (message: Buffer) => {
-  fs.appendFileSync("./MyLapsInputAdapter.log", `${new Date().toISOString()} message: ${message}\n`);
+const logToFileSystem = (message: Buffer | string, fromClient = true) => {
+  fs.appendFileSync("./MyLapsInputAdapter.log", `${new Date().toISOString()} ${fromClient ? "» from" : "« to  "} client: ${message}\n`);
 };
 
 const clearIntervalTimer = (timerHandle: NodeJS.Timeout | null) => {
@@ -55,9 +55,7 @@ class MyLapsForwarder extends BaseClass {
   _configureReceiverSocket = (listenPort: number, bindAddress: string): net.Server => {
     const server = net.createServer(this._onNewConnection as (socket: net.Socket) => void);
     server.listen({ host: bindAddress, port: listenPort }, () => {
-      info(
-        `${this.className} ${MyLapsToRacemapForwarderVersion.gitBranch} is listening on \x1b[32m${bindAddress}\x1b[0m:\x1b[35m${listenPort}\x1b[0m`,
-      );
+      info(`${RacemapMyLapsServerName} is listening on \x1b[32m${bindAddress}\x1b[0m:\x1b[35m${listenPort}\x1b[0m`);
     });
     server.on("error", (err) => {
       error(`${this.className}._configureReceiverSocket`, err);
@@ -114,6 +112,7 @@ class MyLapsForwarder extends BaseClass {
 
     socket.sendFrame = (text: string) => {
       log("Socket.sendFrame", text);
+      logToFileSystem(text + CRLF, false);
       return socket.write(text + CRLF);
     };
 

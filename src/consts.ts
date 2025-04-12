@@ -1,3 +1,5 @@
+import { MyLapsToRacemapForwarderVersion } from "./version";
+
 export const OneHourInMillis = 3600000; // 1 hour in milliseconds
 export const OneMinuteInMillis = 60000; // 1 minute in milliseconds
 export const OneSecondInMillis = 1000; // 1 second in milliseconds
@@ -81,7 +83,7 @@ export const MyLapsIdentifiers = {
   },
 };
 
-export const RacemapMyLapsServerName = "RacemapMyLapsServer_v1.0.0";
+export const RacemapMyLapsServerName = `MyLaps2RMServer_${MyLapsToRacemapForwarderVersion.gitTag.split("_")[0]}`; // Racemap MyLaps server name
 
 export const CRLF = "$"; // special character to separate messages in MyLaps TCP IP protocol
 export const MyLapsDataSeparator = "@"; // special character to separate data in MyLaps TCP IP protocol

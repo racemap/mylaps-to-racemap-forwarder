@@ -114,7 +114,6 @@ test("Ava is running, fixtures and state exists", async (t) => {
 
 test("Test function myLapsLagacyPassingToRead", (t) => {
   const read = myLapsLagacyPassingToRead("Start", fixtures.legacyPassingString);
-  console.log(read);
   t.not(read, null, "read should not be null");
   t.is(read?.chipId, `${MyLapsPrefix}KV86583`, "chipId should be KV86583");
   t.is(read?.timingId, "Start", "timingId should be Start");
@@ -124,7 +123,6 @@ test("Test function myLapsLagacyPassingToRead", (t) => {
 
 test("Test function myLapsPassingToRead", (t) => {
   const read = myLapsPassingToRead("Start001", "Start", fixtures.passingString);
-  console.log(read);
   t.not(read, null, "read should not be null");
   t.is(read?.chipId, `${MyLapsPrefix}0000041`, "chipId should be 0000041");
   t.is(read?.timingId, "Start001", "timingId should be Start001");
