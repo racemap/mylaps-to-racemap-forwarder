@@ -8,7 +8,16 @@
 import net from "node:net";
 import { Buffer } from "node:buffer";
 import { CRLF, MyLapsPrefix } from "./consts";
-import type { ExtendedSocket, MyLapsPassing, MyLapsPassingKeys, MyLapsPassingShortKeys, TimingRead } from "./types";
+import type {
+  ExtendedSocket,
+  MyLapsDevice,
+  MyLapsDeviceKeys,
+  MyLapsDeviceShortKeys,
+  MyLapsPassing,
+  MyLapsPassingKeys,
+  MyLapsPassingShortKeys,
+  TimingRead,
+} from "./types";
 import moment from "moment";
 
 type TArgs = Array<unknown>;
@@ -149,6 +158,14 @@ export const printEnvVar = (envVar: { [name: string]: unknown }, isPublic = true
   console.log(now(), "Log:", `    |-> \x1b[35m${name}\x1b[0m: \x1b[36m${value || "???"}\x1b[0m`);
 };
 
+function prefix(chipId: string): string {
+  // When "MyLaps_" is not prepended it should be prepended
+  if (chipId.includes(MyLapsPrefix)) {
+    return chipId;
+  }
+  return MyLapsPrefix + chipId;
+}
+
 //                                                            |> checksum
 // Where one passing is: KV8658316:13:57.417 3 0F  1000025030870
 //                       |      |            | |        |> date
@@ -177,6 +194,77 @@ export function myLapsLagacyPassingToRead(locationName: string, passingDetails: 
 }
 
 // reads stuff like this
+// id=20250558568|n=BibTagDecoder00AA|mac=0004B70700AA|ant=1|time=954463123529
+export function myLapsDeviceToObject(deviceAsString: string): MyLapsDevice | null {
+  const deviceDetails = deviceAsString.split("|");
+
+  const deviceUpdate: MyLapsDevice = {};
+
+  for (const detail of deviceDetails) {
+    const [key, value] = detail.split("=");
+    deviceUpdate[myLapsDeviceKeyToName(key as MyLapsDeviceShortKeys)] = value;
+  }
+
+  if (deviceUpdate.deviceId != null && deviceUpdate.deviceName != null && deviceUpdate.deviceMac != null) {
+    return deviceUpdate;
+  }
+  return null;
+}
+
+export function myLapsDeviceKeyToName(key: MyLapsDeviceShortKeys): MyLapsDeviceKeys {
+  switch (key) {
+    case "id":
+      return "deviceId";
+    case "n":
+      return "deviceName";
+    case "mac":
+      return "deviceMac";
+    case "ant":
+      return "antennaCount";
+    case "dt":
+      return "deviceType";
+    case "nr":
+      return "deviceNumber";
+    case "bat":
+      return "batteryLevel";
+    case "tbsc":
+      return "timeBetweenSameChip";
+    case "prof":
+      return "profile";
+    case "fwv":
+      return "firmwareVersion";
+    case "bvol":
+      return "beeperVolume";
+    case "btyp":
+      return "beepType";
+    case "cont":
+      return "continuousMode";
+    case "gho":
+      return "gunHoldoff";
+    case "ex1ho":
+      return "ext1Holdoff";
+    case "ex2ho":
+      return "ext2Holdoff";
+    case "temp":
+      return "temperature";
+    case "dst":
+      return "daylightSavingsTime";
+    case "gpsc":
+      return "gPSSatelliteCount";
+    case "gpsx":
+      return "gPSLongitude";
+    case "gpsy":
+      return "gPSLatitude";
+    case "tz":
+      return "timezone";
+
+    default:
+      console.warn("Unknown key:", key);
+  }
+  return key;
+}
+
+// reads stuff like this
 // t=13:11:30.904|c=0000041|ct=UH|d=120606|l=13|dv=4|re=0|an=00001111|g=0|b=41|n=41
 export function myLapsPassingToRead(timingId: string, timingName: string, passingAsString: string): TimingRead | null {
   const passingDetails = passingAsString.split("|");
@@ -197,14 +285,6 @@ export function myLapsPassingToRead(timingId: string, timingName: string, passin
     };
   }
   return null;
-}
-
-function prefix(chipId: string): string {
-  // When "MyLaps_" is not prepended it should be prepended
-  if (chipId.includes(MyLapsPrefix)) {
-    return chipId;
-  }
-  return MyLapsPrefix + chipId;
 }
 
 export function myLapsPassingKeyToName(key: MyLapsPassingShortKeys): MyLapsPassingKeys {

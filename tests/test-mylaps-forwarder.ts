@@ -36,59 +36,67 @@ const fixtures: TTestFixtures = {
   locations: [
     {
       name: "Start",
-      deviceName: `Dev_${shortIdBuilder()}`,
+      locationName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_0`,
       startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((0 * OneHourInMillis) / 7),
+      devicesByName: {},
     },
     {
       name: "1k",
-      deviceName: `Dev_${shortIdBuilder()}`,
+      locationName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_1`,
       startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((1 * OneHourInMillis) / 7),
+      devicesByName: {},
     },
     {
       name: "2k",
-      deviceName: `Dev_${shortIdBuilder()}`,
+      locationName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_2`,
       startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((2 * OneHourInMillis) / 7),
+      devicesByName: {},
     },
     {
       name: "3k",
-      deviceName: `Dev_${shortIdBuilder()}`,
+      locationName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_3`,
       startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((3 * OneHourInMillis) / 7),
+      devicesByName: {},
     },
     {
       name: "5k",
-      deviceName: `Dev_${shortIdBuilder()}`,
+      locationName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_4`,
       startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((4 * OneHourInMillis) / 7),
+      devicesByName: {},
     },
     {
       name: "8k",
-      deviceName: `Dev_${shortIdBuilder()}`,
+      locationName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_5`,
       startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((5 * OneHourInMillis) / 7),
+      devicesByName: {},
     },
     {
       name: "9k",
-      deviceName: `Dev_${shortIdBuilder()}`,
+      locationName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_6`,
       startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((6 * OneHourInMillis) / 7),
+      devicesByName: {},
     },
     {
       name: "Finish",
-      deviceName: `Dev_${shortIdBuilder()}`,
+      locationName: `Dev_${shortIdBuilder()}`,
       computerName: `computer_${shortIdBuilder()}`,
       mac: `${shortId001}_7`,
       startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((7 * OneHourInMillis) / 7),
+      devicesByName: {},
     },
   ],
   passingString: "t=13:11:30.904|c=0000041|ct=UH|d=120606|l=13|dv=4|re=0|an=00001111|g=0|b=41|n=41",
@@ -191,8 +199,8 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
             case MyLapsFunctions.GetLocations: {
               t.log("GetLocations from server => GetLocations");
               const data = [fixtures.clientName, MyLapsFunctions.GetLocations];
-              for (const source of fixtures.locations) {
-                data.push(`${MyLapsIdentifiers.LocationParameters.LocationName}=${source.name}`);
+              for (const location of fixtures.locations) {
+                data.push(`${MyLapsIdentifiers.LocationParameters.LocationName}=${location.name}`);
               }
               state.aTCPClient?.sendData(data);
               break;
@@ -200,8 +208,15 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
 
             case MyLapsFunctions.GetInfo: {
               t.log("GetInfo from server => AckGetInfo");
-              for (const source of fixtures.locations) {
-                state.aTCPClient?.sendData([source.name, MyLapsFunctions.AckGetInfo, source.deviceName, "Unknown", source.computerName]);
+              // if it request an explicit location we only answer for this
+              for (const location of fixtures.locations) {
+                state.aTCPClient?.sendData([
+                  location.name,
+                  MyLapsFunctions.AckGetInfo,
+                  location.locationName ?? "",
+                  "Unknown",
+                  location.computerName,
+                ]);
               }
               break;
             }
@@ -250,20 +265,20 @@ test("the server should have responded with AckPong and GetLocations and GetInfo
   t.not(getInfo, undefined, "server should have responded with GetInfo");
 });
 
-test("it should be possible to send 3 passings for every source to the server", async (t) => {
+test("it should be possible to send 3 passings for every location to the server", async (t) => {
   t.not(state.aTCPClient, null, "tcp client is not null");
   if (state.aTCPClient != null) {
-    // for every source we define 3 passings
-    for (const source of fixtures.locations) {
+    // for every location we define 3 passings
+    for (const location of fixtures.locations) {
       const Attempt = Math.round(100 * Math.random()).toString();
-      const passings = [source.name, MyLapsFunctions.Passing];
+      const passings = [location.name, MyLapsFunctions.Passing];
       for (let i = 0; i < 3; i++) {
-        if (source.startTimeStamp != null) {
+        if (location.startTimeStamp != null) {
           const passing = [
-            `${MyLapsIdentifiers.PassingParameters.Time}=${moment(source.startTimeStamp + i * OneSecondInMillis).format("HH:mm:ss.SSS")}`,
+            `${MyLapsIdentifiers.PassingParameters.Time}=${moment(location.startTimeStamp + i * OneSecondInMillis).format("HH:mm:ss.SSS")}`,
             `${MyLapsIdentifiers.PassingParameters.ChipCode}=${fixtures.trasnponderIds[i]}`,
             `${MyLapsIdentifiers.PassingParameters.ChipType}=UH`,
-            `${MyLapsIdentifiers.PassingParameters.Date}=${moment(source.startTimeStamp + i * OneSecondInMillis).format("YYMMDD")}`,
+            `${MyLapsIdentifiers.PassingParameters.Date}=${moment(location.startTimeStamp + i * OneSecondInMillis).format("YYMMDD")}`,
             `${MyLapsIdentifiers.PassingParameters.LapNumber}=1`,
             `${MyLapsIdentifiers.PassingParameters.DeviceNumber}=4`,
             `${MyLapsIdentifiers.PassingParameters.ReaderNumber}=1`,

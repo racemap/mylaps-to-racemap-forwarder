@@ -20,29 +20,20 @@ export type StoredTimingRead = TimingRead & {
 export type LocationUpdate = {
   locationName: string;
   computerName?: string;
-  deviceUpdate?: DeviceUpdate;
-};
-
-export type DeviceUpdate = {
-  deviceName: string;
-  mac?: string;
-};
-
-export type MyLapsDevice = {
-  name: string;
-  mac?: string;
+  deviceUpdate?: MyLapsDevice;
 };
 
 // this can be obtained by calling the getInfo function with the test prefix
 // => Send("Test@GetInfo@$")
 export type MyLapsLocation = {
-  id?: string; // id of the source
-  mac?: string; // MAC address of the source
+  id?: string; // id of the location
+  mac?: string; // MAC address of the location
   name: string;
   computerName: string;
   devicesByName: Record<string, MyLapsDevice>;
-  lastSeen?: Date | null; // last time the source was seen
-  startTimeStamp?: number; // timestamp of the source
+  lastSeen?: Date | null; // last time the location was seen
+  startTimeStamp?: number; // timestamp of the location
+  locationName?: string; // name of the location for test
 };
 
 export type MyLapsClientMetadata = {
@@ -58,6 +49,56 @@ export type MyLapsClient = {
   meta: MyLapsClientMetadata;
   openedAt: string;
 };
+
+export type MyLapsDevice = {
+  deviceId?: string;
+  deviceName?: string;
+  deviceType?: string;
+  deviceNumber?: string;
+  deviceMac?: string;
+  batteryLevel?: string;
+  timeBetweenSameChip?: string;
+  profile?: string;
+  antennaCount?: string;
+  firmwareVersion?: string;
+  beeperVolume?: string;
+  beepType?: string;
+  continuousMode?: string;
+  gunHoldoff?: string;
+  ext1Holdoff?: string;
+  ext2Holdoff?: string;
+  temperature?: string;
+  daylightSavingsTime?: string;
+  gPSSatelliteCount?: string;
+  gPSLongitude?: string;
+  gPSLatitude?: string;
+  timezone?: string;
+};
+
+export type MyLapsDeviceKeys = keyof MyLapsDevice;
+export type MyLapsDeviceShortKeys =
+  | "id"
+  | "n"
+  | "dt"
+  | "nr"
+  | "mac"
+  | "bat"
+  | "tbsc"
+  | "prof"
+  | "ant"
+  | "fwv"
+  | "bvol"
+  | "btyp"
+  | "cont"
+  | "gho"
+  | "ex1ho"
+  | "ex2ho"
+  | "temp"
+  | "dst"
+  | "gpsc"
+  | "gpsx"
+  | "gpsy"
+  | "tz";
 
 export type MyLapsPassing = {
   chipCode?: string;

@@ -4,7 +4,7 @@ import shortId from "shortid";
 import APIClient from "./api-client";
 import { BaseClass } from "./base-class";
 import { MyLapsToRacemapForwarderVersion } from "./version";
-import type { DeviceUpdate, ExtendedSocket, LocationUpdate, MessageParts, MyLapsDevice, MyLapsLocation, TimingRead } from "./types";
+import type { ExtendedSocket, LocationUpdate, MessageParts, MyLapsDevice, MyLapsLocation, TimingRead } from "./types";
 import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, RacemapMyLapsServerName } from "./consts";
 import {
   log,
@@ -16,6 +16,7 @@ import {
   myLapsPassingToRead,
   storeIncomingRawData,
   myLapsLagacyPassingToRead,
+  myLapsDeviceToObject,
 } from "./functions";
 
 const MAX_MESSAGE_DATA_DELAY_IN_MS = 500;
@@ -181,17 +182,16 @@ class MyLapsForwarder extends BaseClass {
     }
   };
 
-  _createOrUpdateDevice = (location: MyLapsLocation, deviceUpdate: DeviceUpdate): void => {
-    let device: MyLapsDevice = location.devicesByName[deviceUpdate.deviceName];
-    if (device == null) {
-      device = {
-        name: deviceUpdate.deviceName,
-        mac: deviceUpdate.mac,
-      };
-      location.devicesByName[deviceUpdate.deviceName] = device;
-    } else {
-      if (deviceUpdate.mac != null) {
-        device.mac = deviceUpdate.mac;
+  _createOrUpdateDevice = (location: MyLapsLocation, deviceUpdate: MyLapsDevice): void => {
+    if (deviceUpdate.deviceName != null) {
+      const device: MyLapsDevice = location.devicesByName[deviceUpdate.deviceName];
+      if (device == null) {
+        location.devicesByName[deviceUpdate.deviceName] = deviceUpdate;
+      } else {
+        location.devicesByName[deviceUpdate.deviceName] = {
+          ...device,
+          ...deviceUpdate,
+        };
       }
     }
   };
@@ -207,7 +207,7 @@ class MyLapsForwarder extends BaseClass {
         lastSeen: new Date(),
       };
       refToSocket.meta.locations[update.locationName] = location;
-      // if we get a new source we ask the client for the connected hardware => readers and so
+      // if we get a new location we ask the client for the connected hardware => readers and so
       refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetInfo, update.locationName]);
     } else {
       location.lastSeen = new Date();
@@ -216,13 +216,7 @@ class MyLapsForwarder extends BaseClass {
       }
     }
     if (update.deviceUpdate != null) {
-      const deviceName = update.deviceUpdate.deviceName;
-      if (deviceName != null) {
-        location.devicesByName[deviceName] = {
-          name: deviceName,
-          mac: update.deviceUpdate.mac,
-        };
-      }
+      this._createOrUpdateDevice(location, update.deviceUpdate);
     }
   };
 
@@ -288,17 +282,33 @@ class MyLapsForwarder extends BaseClass {
           case MyLapsFunctions.AckGetInfo: {
             if (len > 4) {
               const locationName = parts[0];
-              const deviceName = parts[2];
+              const deviceDetails = parts[2];
               const unknown = parts[3];
               const computerName = parts[4];
-              this._createOrUpdateLocation(refToSocket, {
-                locationName,
-                computerName,
-                deviceUpdate: {
-                  deviceName,
-                },
-              });
-              success(`${this.className}._handleMessages`, "AckGetInfo message received: ", locationName, deviceName, computerName);
+
+              // this is a bit tricky cause deviceName has diffrent contents depending of version 1 or 2 of MyLaps protocol
+              if (unknown === "Unknown") {
+                // Version 1
+                this._createOrUpdateLocation(refToSocket, {
+                  locationName,
+                  computerName,
+                  deviceUpdate: {
+                    deviceName: deviceDetails,
+                  },
+                });
+              } else {
+                // Version 2
+                // 20M@AckGetInfo@id=20250558687|n=BibTagDecoder00DF|mac=0004B70700DF|ant=2|time=954463123529@$
+                // 20M@AckGetInfo@id=20250558568|n=BibTagDecoder00AA|mac=0004B70700AA|ant=1|time=954463123529@$
+                const device = myLapsDeviceToObject(deviceDetails);
+                if (device != null) {
+                  this._createOrUpdateLocation(refToSocket, {
+                    locationName,
+                    deviceUpdate: device,
+                  });
+                }
+              }
+              success(`${this.className}._handleMessages`, "AckGetInfo message received: ", locationName);
             } else {
               warn(`${this.className}._handleMessages`, "AckGetInfo message with wrong part length received", parts.length, parts);
             }
