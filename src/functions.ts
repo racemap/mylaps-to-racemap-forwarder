@@ -7,7 +7,7 @@
 
 import net from "node:net";
 import { Buffer } from "node:buffer";
-import { CRLF } from "./consts";
+import { CRLF, MyLapsPrefix } from "./consts";
 import type { ExtendedSocket, MyLapsPassing, MyLapsPassingKeys, MyLapsPassingShortKeys, TimingRead } from "./types";
 import moment from "moment";
 
@@ -169,7 +169,7 @@ export function myLapsLagacyPassingToRead(locationName: string, passingDetails: 
       timingId: locationName,
       timingName: locationName,
       timestamp: moment.utc(`${date} ${time}`, "YYMMDD hh:mm:ss.SSS").toISOString(),
-      chipId: transponderId,
+      chipId: prefix(transponderId),
     };
     return read;
   }
@@ -192,11 +192,19 @@ export function myLapsPassingToRead(timingId: string, timingName: string, passin
     return {
       timingId,
       timingName,
-      chipId: passing.chipCode,
+      chipId: prefix(passing.chipCode),
       timestamp: moment.utc(`${passing.date}_${passing.time}`, "YYMMDD_hh:mm:ss.SSS").toISOString(),
     };
   }
   return null;
+}
+
+function prefix(chipId: string): string {
+  // When "MyLaps_" is not prepended it should be prepended
+  if (chipId.includes(MyLapsPrefix)) {
+    return chipId;
+  }
+  return MyLapsPrefix + chipId;
 }
 
 export function myLapsPassingKeyToName(key: MyLapsPassingShortKeys): MyLapsPassingKeys {

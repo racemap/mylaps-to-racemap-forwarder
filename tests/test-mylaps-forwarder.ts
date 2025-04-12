@@ -1,7 +1,7 @@
 import moment from "moment";
 import MyLapsForwarder from "../src/forwarder";
 import { serial as test } from "ava";
-import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, OneHourInMillis, OneSecondInMillis } from "../src/consts";
+import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, OneHourInMillis, OneSecondInMillis, MyLapsPrefix } from "../src/consts";
 import type { TPredictionTestTimes, TTestFixtures, TTestState } from "../src/types";
 import {
   sleep,
@@ -116,7 +116,7 @@ test("Test function myLapsLagacyPassingToRead", (t) => {
   const read = myLapsLagacyPassingToRead("Start", fixtures.legacyPassingString);
   console.log(read);
   t.not(read, null, "read should not be null");
-  t.is(read?.chipId, "KV86583", "chipId should be KV86583");
+  t.is(read?.chipId, `${MyLapsPrefix}KV86583`, "chipId should be KV86583");
   t.is(read?.timingId, "Start", "timingId should be Start");
   t.is(read?.timingName, "Start", "timingName should be Start");
   t.is(read?.timestamp, "2025-03-08T16:13:57.417Z", "timestamp should be 2025-03-08T16:13:57.417Z");
@@ -126,7 +126,7 @@ test("Test function myLapsPassingToRead", (t) => {
   const read = myLapsPassingToRead("Start001", "Start", fixtures.passingString);
   console.log(read);
   t.not(read, null, "read should not be null");
-  t.is(read?.chipId, "0000041", "chipId should be 0000041");
+  t.is(read?.chipId, `${MyLapsPrefix}0000041`, "chipId should be 0000041");
   t.is(read?.timingId, "Start001", "timingId should be Start001");
   t.is(read?.timingName, "Start", "timingName should be Start");
   t.is(read?.timestamp, "2012-06-06T13:11:30.904Z", "timestamp should be 2012-06-06T13:11:30.904Z");
