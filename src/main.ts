@@ -1,11 +1,13 @@
 import APIClient from "./api-client";
 import MyLapsForwarder from "./forwarder";
+import { MyLapsToRacemapForwarderVersion } from "./version";
 import { info, log, printEnvVar, success } from "./functions";
 
 const RACEMAP_API_HOST = process.env.RCEMAP_API_HOST ?? "https://racemap.com";
 const RACEMAP_API_TOKEN = process.env.RACEMAP_API_TOKEN ?? "";
 const LISTEN_MODE = process.env.LISTEN_MODE?.toLocaleLowerCase() ?? "private";
 const LISTEN_PORT = Number.parseInt(process.env.LISTEN_PORT ?? "3097");
+const VERSION = MyLapsToRacemapForwarderVersion.gitTag.split("_")[0];
 const apiClient = new APIClient({ "api-token": RACEMAP_API_TOKEN });
 
 async function main() {
@@ -15,6 +17,7 @@ async function main() {
   printEnvVar({ RACEMAP_API_TOKEN });
   printEnvVar({ LISTEN_MODE });
   printEnvVar({ LISTEN_PORT });
+  printEnvVar({ VERSION });
 
   info("Check LISTEN_MODE");
   if (!["private", "public"].includes(LISTEN_MODE)) {

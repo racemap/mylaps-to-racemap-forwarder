@@ -1,6 +1,7 @@
 # Builded stuff
 .bin
 .build
+src/version.ts
 
 
 # Logs

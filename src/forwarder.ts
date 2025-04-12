@@ -3,7 +3,8 @@ import net from "node:net";
 import shortId from "shortid";
 import APIClient from "./api-client";
 import { BaseClass } from "./base-class";
-import type { ExtendedSocket, MessageParts, MyLapsPassing, MyLapsPassingShortKeys, TimingRead } from "./types";
+import { MyLapsToRacemapForwarderVersion } from "./version";
+import type { ExtendedSocket, MessageParts, TimingRead } from "./types";
 import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, RacemapMyLapsServerName } from "./consts";
 import {
   log,
@@ -12,12 +13,10 @@ import {
   error,
   success,
   processStoredData,
-  storeIncomingRawData,
-  myLapsPassingKeyToName,
   myLapsPassingToRead,
+  storeIncomingRawData,
   myLapsLagacyPassingToRead,
 } from "./functions";
-import moment from "moment";
 
 const MAX_MESSAGE_DATA_DELAY_IN_MS = 500;
 
@@ -56,7 +55,9 @@ class MyLapsForwarder extends BaseClass {
   _configureReceiverSocket = (listenPort: number, bindAddress: string): net.Server => {
     const server = net.createServer(this._onNewConnection as (socket: net.Socket) => void);
     server.listen({ host: bindAddress, port: listenPort }, () => {
-      info(`${this.className} is listening on \x1b[32m${bindAddress}\x1b[0m:\x1b[35m${listenPort}\x1b[0m`);
+      info(
+        `${this.className} ${MyLapsToRacemapForwarderVersion.gitBranch} is listening on \x1b[32m${bindAddress}\x1b[0m:\x1b[35m${listenPort}\x1b[0m`,
+      );
     });
     server.on("error", (err) => {
       error(`${this.className}._configureReceiverSocket`, err);
@@ -283,7 +284,8 @@ class MyLapsForwarder extends BaseClass {
               const counter = Number.parseInt(parts[len - 2]);
               if (counter > 0) {
                 for (let i = 2; i < len - 2; i++) {
-                  const read = myLapsPassingToRead(locationName, locationName, parts[i]);
+                  const passing = parts[i];
+                  const read = myLapsPassingToRead(locationName, locationName, passing);
                   if (read != null) {
                     reads.push(read);
                   } else {

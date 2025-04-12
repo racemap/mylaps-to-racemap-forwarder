@@ -1,6 +1,6 @@
 {
-  "name": "v2",
-  "version": "1.0.0",
+  "name": "mylaps-to-racemap-forwarder",
+  "version": "v1.0.1",
   "main": "src/forwarder.ts",
   "author": "jens",
   "license": "MIT",
@@ -14,7 +14,9 @@
     "start": "yarn build && dotenv-load node .build/mylaps-to-racemap-forwarder.js ",
     "bundle": "yarn build && pkg --compress brotli -t node18-win-x64,node18-linux-x64,node18-macos-x64 .build/mylaps-to-racemap-forwarder.js --out-path .bin",
     "pretty": "prettier --write .",
-    "prepare": "husky"
+    "preinstall": "node ./scripts/edit-git-config.mjs && git checkout",
+    "inc-version": "node ./scripts/new-version.mjs ./ && git checkout && node ./scripts/add-version.mjs && yarn pretty",
+    "build-version": "node ./scripts/handle-git-version.mjs ./templates/version.ts.template ./src/version.ts"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.9",
