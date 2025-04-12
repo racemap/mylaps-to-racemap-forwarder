@@ -22,8 +22,8 @@ The service also manages the communication with the MyLaps software.
 
 You can download the latest binary for your platform from the here and run it with the following commands.
 
-- [mylaps-to-racemap-forwarder-win-x64-v1.0.1.exe](https://github.com/racemap/mylaps-to-racemap-forwarder/releases/download/v1.0.1/mylaps-to-racemap-forwarder-win-x64-v1.0.1.exe)
-- [mylaps-to-racemap-forwarder-linux-x64-v1.0.1](https://github.com/racemap/mylaps-to-racemap-forwarder/releases/download/v1.0.1/mylaps-to-racemap-forwarder-linux-x64-v1.0.1)
+- [mylaps-to-racemap-forwarder-win-x64-v1.0.2.exe](https://github.com/racemap/mylaps-to-racemap-forwarder/releases/download/v1.0.2/mylaps-to-racemap-forwarder-win-x64-v1.0.2.exe)
+- [mylaps-to-racemap-forwarder-linux-x64-v1.0.2](https://github.com/racemap/mylaps-to-racemap-forwarder/releases/download/v1.0.2/mylaps-to-racemap-forwarder-linux-x64-v1.0.2)
 
 #### Windows
 
