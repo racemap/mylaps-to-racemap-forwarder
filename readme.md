@@ -8,6 +8,8 @@ The service also manages the communication with the MyLaps software.
 - RACEMAP API token is needed to forward data to racemap.com
 - API token is set by using the environment var **RACEMAP_API_TOKEN**
 
+![image](./docs/information-flow.excalidraw.svg)
+
 ## How to use
 
 1. Generate the API token for your RACEMAP account. It can be found in your user section.
