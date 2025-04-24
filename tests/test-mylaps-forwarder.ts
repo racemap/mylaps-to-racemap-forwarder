@@ -1,8 +1,16 @@
 import moment from "moment";
-import MyLapsForwarder from "../src/forwarder";
+import MyLapsForwarder from "../src-local-backend/forwarder";
 import { serial as test } from "ava";
-import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, OneHourInMillis, OneSecondInMillis, MyLapsPrefix } from "../src/consts";
-import type { TPredictionTestTimes, TTestFixtures, TTestState } from "../src/types";
+import {
+  CRLF,
+  MyLapsFunctions,
+  MyLapsIdentifiers,
+  MyLapsDataSeparator,
+  OneHourInMillis,
+  OneSecondInMillis,
+  MyLapsPrefix,
+} from "../src-local-backend/consts";
+import type { TPredictionTestTimes, TTestFixtures, TTestState } from "../src-local-backend/types";
 import {
   sleep,
   isPortInUse,
@@ -12,7 +20,7 @@ import {
   storeIncomingRawData,
   myLapsLagacyPassingToRead,
   myLapsPassingToRead,
-} from "../src/functions";
+} from "../src-local-backend/functions";
 
 const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST ?? "https://racemap.com";
 const RACEMAP_API_TOKEN = process.env.RACEMAP_API_TOKEN ?? "";

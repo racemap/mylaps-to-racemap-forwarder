@@ -1,5 +1,6 @@
 import APIClient from "./api-client";
 import MyLapsForwarder from "./forwarder";
+import { app, BrowserWindow, Menu } from "electron/main";
 import { MyLapsToRacemapForwarderVersion } from "./version";
 import { info, log, printEnvVar, success } from "./functions";
 
@@ -10,7 +11,7 @@ const LISTEN_PORT = Number.parseInt(process.env.LISTEN_PORT ?? "3097");
 const VERSION = MyLapsToRacemapForwarderVersion.gitTag.split("_")[0];
 const apiClient = new APIClient({ "api-token": RACEMAP_API_TOKEN });
 
-async function main() {
+async function bootup() {
   log("Hello from mylaps-forwarder");
 
   printEnvVar({ RACEMAP_API_HOST });
@@ -43,4 +44,28 @@ async function main() {
   }
 }
 
-main();
+const createWindow = () => {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+      contextIsolation: true,
+      // preload: path.join(__dirname, "preload.js"), // optional
+    },
+  });
+
+  win.loadFile("public/index.html");
+
+  try {
+    bootup();
+  } catch (error) {
+    log("Error during bootup: ", error);
+    win.webContents.send("error", error);
+  }
+};
+
+app.whenReady().then(() => {
+  Menu.setApplicationMenu(null); // Removes the menu bar
+
+  createWindow();
+});

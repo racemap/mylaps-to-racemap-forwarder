@@ -1,7 +1,12 @@
 # Builded stuff
 .bin
 .build
-src/version.ts
+src-local-backend/version.ts
+main.js
+public/bundle.css
+renderer/bundle.js
+
+
 
 # Logs
 MyLapsInputAdapter.log
