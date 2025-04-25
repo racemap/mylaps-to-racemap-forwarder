@@ -1,8 +1,8 @@
 #! /usr/bin/node
 
-import child from "node:child_process";
-import fs from "node:fs";
-import path from "node:path";
+import child from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
 /**
  * script to generate version information files
@@ -18,27 +18,27 @@ import path from "node:path";
 const destinationFolder = process.argv[2];
 
 if (destinationFolder == null) {
-  console.error("You have to deliver a destination Folder");
-  console.log("i.e. ./new-version.mjs ./subfolder");
-  console.log("add --help to get help");
+  console.error('You have to deliver a destination Folder');
+  console.log('i.e. ./new-version.mjs ./subfolder');
+  console.log('add --help to get help');
   process.exit();
 }
 
 const versionFilePath = path.resolve(`${path.normalize(destinationFolder)}.version`);
-const minor = process.argv.join(" ").toLowerCase().includes("--minor");
-const major = process.argv.join(" ").toLowerCase().includes("--major");
-const hashOnly = process.argv.join(" ").toLowerCase().includes("--hash-only");
-const help = process.argv.join(" ").toLowerCase().includes("--help");
+const minor = process.argv.join(' ').toLowerCase().includes('--minor');
+const major = process.argv.join(' ').toLowerCase().includes('--major');
+const hashOnly = process.argv.join(' ').toLowerCase().includes('--hash-only');
+const help = process.argv.join(' ').toLowerCase().includes('--help');
 
-let text = "Doing a build update";
-if (minor) text = "Doing a minor update";
-if (major) text = "Doing a major update";
-if (hashOnly) text = "Only updating the hashes.";
+let text = 'Doing a build update';
+if (minor) text = 'Doing a minor update';
+if (major) text = 'Doing a major update';
+if (hashOnly) text = 'Only updating the hashes.';
 if (help) {
-  console.log("Run script with folder to update version file in folder");
-  console.log("Add --major to increase major version by 1");
-  console.log("Add --minor to increase minor version by 1");
-  console.log("Add --hash-only to update the hashes without a version change");
+  console.log('Run script with folder to update version file in folder');
+  console.log('Add --major to increase major version by 1');
+  console.log('Add --minor to increase minor version by 1');
+  console.log('Add --hash-only to update the hashes without a version change');
   process.exit();
 }
 
@@ -48,7 +48,7 @@ const getLastFolderSegment = (aPath) => {
 };
 
 const readVersion = (versionString) => {
-  const temp = versionString.split("v")[1].split(".");
+  const temp = versionString.split('v')[1].split('.');
   return {
     major: Number.parseInt(temp[0]),
     minor: Number.parseInt(temp[1]),
@@ -75,12 +75,12 @@ const upgradeVersion = (oldVersion, minor, major) => {
 
 const getFolderHash = (folder) => {
   const command = folder ? `git log -n 1 --format="%H" -- ${folder}` : `git log -n 1 --format="%H"`;
-  return child.execSync(command).toString("utf8").replace("\n", " ").trim().slice(0, 7);
+  return child.execSync(command).toString('utf8').replace('\n', ' ').trim().slice(0, 7);
 };
 
 let versionFile = {
   name: getLastFolderSegment(`${process.cwd()}/.version`),
-  prefix: "v1.0.0",
+  prefix: 'v1.0.0',
   folderHash: getFolderHash(path.dirname(versionFilePath)),
   globalHash: getFolderHash(),
 };
@@ -101,10 +101,10 @@ if (fs.existsSync(versionFilePath)) {
 } else {
   console.log(`Version file missing: ${versionFilePath} generating version file.`);
   console.log(`|-> name: \x1b[33m${versionFile.name}\x1b[0m`);
-  console.log("|-> prefix: initated as \x1b[33mv1.0.0\x1b[0m");
+  console.log('|-> prefix: initated as \x1b[33mv1.0.0\x1b[0m');
 }
 
 console.log(`|-> folderHash: \x1b[33m${versionFile.folderHash}\x1b[0m`);
 console.log(`|-> globalHash: \x1b[33m${versionFile.globalHash}\x1b[0m`);
 
-fs.writeFileSync(versionFilePath, JSON.stringify(versionFile, null, 2).concat("\n"));
+fs.writeFileSync(versionFilePath, JSON.stringify(versionFile, null, 2).concat('\n'));

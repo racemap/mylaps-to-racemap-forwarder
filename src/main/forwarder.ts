@@ -1,11 +1,11 @@
-import fs from "node:fs";
-import net from "node:net";
-import shortId from "shortid";
-import APIClient from "./api-client";
-import { BaseClass } from "./base-class";
-import { MyLapsToRacemapForwarderVersion } from "./version";
-import type { ExtendedSocket, LocationUpdate, MessageParts, MyLapsDevice, MyLapsLocation, TimingRead } from "./types";
-import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, RacemapMyLapsServerName } from "./consts";
+import fs from 'node:fs';
+import net from 'node:net';
+import shortId from 'shortid';
+import APIClient from './api-client';
+import { BaseClass } from './base-class';
+import { MyLapsToRacemapForwarderVersion } from './version';
+import type { ExtendedSocket, LocationUpdate, MessageParts, MyLapsDevice, MyLapsLocation, TimingRead } from './types';
+import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, RacemapMyLapsServerName } from './consts';
 import {
   log,
   info,
@@ -17,12 +17,12 @@ import {
   storeIncomingRawData,
   myLapsLagacyPassingToRead,
   myLapsDeviceToObject,
-} from "./functions";
+} from './functions';
 
 const MAX_MESSAGE_DATA_DELAY_IN_MS = 500;
 
 const logToFileSystem = (message: Buffer | string, fromClient = true) => {
-  fs.appendFileSync("./MyLapsInputAdapter.log", `${new Date().toISOString()} ${fromClient ? "» from" : "« to  "} client: ${message}\n`);
+  fs.appendFileSync('./MyLapsInputAdapter.log', `${new Date().toISOString()} ${fromClient ? '» from' : '« to  '} client: ${message}\n`);
 };
 
 const clearIntervalTimer = (timerHandle: NodeJS.Timeout | null) => {
@@ -41,8 +41,8 @@ class MyLapsForwarder extends BaseClass {
     super();
 
     this._apiToken = apiToken;
-    this._apiClient = new APIClient({ "api-token": apiToken });
-    this._server = this._configureReceiverSocket(listenPort, justLocalHost ? "127.0.0.1" : "0.0.0.0");
+    this._apiClient = new APIClient({ 'api-token': apiToken });
+    this._server = this._configureReceiverSocket(listenPort, justLocalHost ? '127.0.0.1' : '0.0.0.0');
   }
 
   lastReveivedMessages = (socketId: string): Array<string> => {
@@ -58,7 +58,7 @@ class MyLapsForwarder extends BaseClass {
     server.listen({ host: bindAddress, port: listenPort }, () => {
       info(`${RacemapMyLapsServerName} is listening on \x1b[32m${bindAddress}\x1b[0m:\x1b[35m${listenPort}\x1b[0m`);
     });
-    server.on("error", (err) => {
+    server.on('error', (err) => {
       error(`${this.className}._configureReceiverSocket`, err);
     });
     return server;
@@ -68,7 +68,7 @@ class MyLapsForwarder extends BaseClass {
     log(`${this.className}Socket.onNewConnection`);
 
     socket.id = shortId.generate();
-    socket.userId = "";
+    socket.userId = '';
     socket.openedAt = new Date();
     socket.identified = false;
     socket.cache = {
@@ -83,7 +83,7 @@ class MyLapsForwarder extends BaseClass {
     this._connections.set(socket.id, socket); // The server knows its sockets
 
     // scope is MyLapsForwarder
-    socket.on("error", (error: Error) => {
+    socket.on('error', (error: Error) => {
       if (error != null) {
         log(`${this.className}Socket.onError: ${error} ${error.stack}`);
         clearIntervalTimer(socket.keepAliveTimerHandle);
@@ -93,14 +93,14 @@ class MyLapsForwarder extends BaseClass {
     });
 
     // Scope is MyLapsForwarder
-    socket.on("end", () => {
+    socket.on('end', () => {
       log(`${this.className}Socket.onEnd`);
       clearIntervalTimer(socket.keepAliveTimerHandle);
       clearIntervalTimer(socket.triggerStartTransmissionHandle);
       this._connections.delete(socket.id);
     });
 
-    socket.on("data", (data: Buffer) => {
+    socket.on('data', (data: Buffer) => {
       try {
         storeIncomingRawData(data, socket.cache, MAX_MESSAGE_DATA_DELAY_IN_MS);
         processStoredData(socket.cache, (message) => {
@@ -112,7 +112,7 @@ class MyLapsForwarder extends BaseClass {
     });
 
     socket.sendFrame = (text: string) => {
-      log("Socket.sendFrame", text);
+      log('Socket.sendFrame', text);
       logToFileSystem(text + CRLF, false);
       return socket.write(text + CRLF);
     };
@@ -167,18 +167,18 @@ class MyLapsForwarder extends BaseClass {
     if (parts.length === 3 && (parts[1] === MyLapsFunctions.Ping || parts[1] === MyLapsFunctions.Pong)) {
       refToSocket.identified = true;
       refToSocket.meta = {
-        name: "",
-        version: "v2.1",
+        name: '',
+        version: 'v2.1',
         connectionId: undefined,
         locations: {},
         clientRespondedAt: new Date(),
       };
 
-      refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPong, "@Version2.1"]);
+      refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPong, '@Version2.1']);
       refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetLocations]);
       refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetInfo]);
     } else {
-      warn(`${this.className}._handleWelcomeMessage`, "Unknown welcome message.", parts);
+      warn(`${this.className}._handleWelcomeMessage`, 'Unknown welcome message.', parts);
     }
   };
 
@@ -199,10 +199,10 @@ class MyLapsForwarder extends BaseClass {
   _createOrUpdateLocation = (refToSocket: ExtendedSocket, update: LocationUpdate): void => {
     let location = refToSocket.meta.locations[update.locationName];
     if (location == null) {
-      success(`${this.className}._createOrUpdateLocation`, "New location detected: ", update.locationName);
+      success(`${this.className}._createOrUpdateLocation`, 'New location detected: ', update.locationName);
       location = {
         name: update.locationName,
-        computerName: update.computerName ? update.computerName : "",
+        computerName: update.computerName ? update.computerName : '',
         devicesByName: {},
         lastSeen: new Date(),
       };
@@ -223,7 +223,7 @@ class MyLapsForwarder extends BaseClass {
   // When the incoming stream is:  Toolkit@GetLocations@ln=Start@ln=5K@ln=Finish@$
   // The parts are: [Toolkit, GetLocations, ln=Start, ln=5K, ln=Finish]
   _handleMessages = (refToSocket: ExtendedSocket, parts: MessageParts): void => {
-    if (["v1.0", "v2.1"].includes(refToSocket.meta.version)) {
+    if (['v1.0', 'v2.1'].includes(refToSocket.meta.version)) {
       const len = parts.length;
       if (len > 1) {
         const myLapsFunction = parts[1];
@@ -232,7 +232,7 @@ class MyLapsForwarder extends BaseClass {
             const replied = refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPong]);
             const locationName = parts[0];
             this._createOrUpdateLocation(refToSocket, { locationName });
-            info(`${this.className}._handleMessages Pong received from client and ${replied ? "answered" : "not answered"}.`);
+            info(`${this.className}._handleMessages Pong received from client and ${replied ? 'answered' : 'not answered'}.`);
             break;
           }
 
@@ -240,7 +240,7 @@ class MyLapsForwarder extends BaseClass {
           case MyLapsFunctions.AckPong: {
             const locationName = parts[0];
             this._createOrUpdateLocation(refToSocket, { locationName });
-            info(`${this.className}._handleMessages`, "AckPong received from client.");
+            info(`${this.className}._handleMessages`, 'AckPong received from client.');
             break;
           }
 
@@ -248,7 +248,7 @@ class MyLapsForwarder extends BaseClass {
             const replied = refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPing]);
             const locationName = parts[0];
             this._createOrUpdateLocation(refToSocket, { locationName });
-            info(`${this.className}._handleMessages Ping received from client and ${replied ? "answered" : "not answered"}.`);
+            info(`${this.className}._handleMessages Ping received from client and ${replied ? 'answered' : 'not answered'}.`);
             break;
           }
 
@@ -256,25 +256,25 @@ class MyLapsForwarder extends BaseClass {
           case MyLapsFunctions.AckPing: {
             const locationName = parts[0];
             this._createOrUpdateLocation(refToSocket, { locationName });
-            info(`${this.className}._handleMessages`, "AckPing received from client.");
+            info(`${this.className}._handleMessages`, 'AckPing received from client.');
             break;
           }
 
           case MyLapsFunctions.GetLocations: {
             refToSocket.meta.name = parts[0];
             for (let i = 2; i < len - 1; i++) {
-              const location = parts[i].split("=");
+              const location = parts[i].split('=');
               if (location.length === 2 && location[0] === MyLapsIdentifiers.LocationParameters.LocationName) {
                 const locationName = location[1];
                 this._createOrUpdateLocation(refToSocket, { locationName });
               } else {
-                warn(`${this.className}._handleMessages`, "Unknown location parameter", location);
+                warn(`${this.className}._handleMessages`, 'Unknown location parameter', location);
               }
             }
             success(
               `${this.className}._handleMessages`,
-              "Answer to GetLocations message received: ",
-              Object.keys(refToSocket.meta.locations).join(", "),
+              'Answer to GetLocations message received: ',
+              Object.keys(refToSocket.meta.locations).join(', '),
             );
             break;
           }
@@ -287,7 +287,7 @@ class MyLapsForwarder extends BaseClass {
               const computerName = parts[4];
 
               // this is a bit tricky cause deviceName has diffrent contents depending of version 1 or 2 of MyLaps protocol
-              if (unknown === "Unknown") {
+              if (unknown === 'Unknown') {
                 // Version 1
                 this._createOrUpdateLocation(refToSocket, {
                   locationName,
@@ -308,9 +308,9 @@ class MyLapsForwarder extends BaseClass {
                   });
                 }
               }
-              success(`${this.className}._handleMessages`, "AckGetInfo message received: ", locationName);
+              success(`${this.className}._handleMessages`, 'AckGetInfo message received: ', locationName);
             } else {
-              warn(`${this.className}._handleMessages`, "AckGetInfo message with wrong part length received", parts.length, parts);
+              warn(`${this.className}._handleMessages`, 'AckGetInfo message with wrong part length received', parts.length, parts);
             }
             break;
           }
@@ -332,7 +332,7 @@ class MyLapsForwarder extends BaseClass {
                   if (read != null) {
                     reads.push(read);
                   } else {
-                    warn(`${this.className}._handleMessages`, "Passing message with missing keys received:", passing);
+                    warn(`${this.className}._handleMessages`, 'Passing message with missing keys received:', passing);
                   }
                 }
                 refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPassing, counter.toString()]);
@@ -380,7 +380,7 @@ class MyLapsForwarder extends BaseClass {
           }
 
           default: {
-            warn("Message with unknown MyLaps function received:", myLapsFunction, parts);
+            warn('Message with unknown MyLaps function received:', myLapsFunction, parts);
             break;
           }
         }
@@ -394,9 +394,9 @@ class MyLapsForwarder extends BaseClass {
     // log("tryToPushNonlocatedReadToRacemap", timingReads);
     const response = await this._apiClient.sendTimingReadsAsJSON(timingReads);
     if (response.status === 200) {
-      success("tryToPushNonlocatedReadToRacemap", timingReads);
+      success('tryToPushNonlocatedReadToRacemap', timingReads);
     } else {
-      warn("tryToPushNonlocatedReadToRacemap", response.status);
+      warn('tryToPushNonlocatedReadToRacemap', response.status);
       warn(`|-> reads:${JSON.stringify(timingReads)}`);
     }
   }

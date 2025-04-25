@@ -1,10 +1,10 @@
-import withQuery from "with-query";
-import type { StoredTimingRead, TimingRead } from "./types";
+import withQuery from 'with-query';
+import type { StoredTimingRead, TimingRead } from './types';
 
-const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST || "https://racemap.com";
+const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST || 'https://racemap.com';
 
 class APIClient {
-  _host = "";
+  _host = '';
   _headers: HeadersInit = {};
 
   constructor(headers: HeadersInit = {}) {
@@ -22,17 +22,17 @@ class APIClient {
 
   async _getJSON(path: string): Promise<any> {
     const res = await this._fetch(path, {
-      headers: { Accept: "application/json" },
+      headers: { Accept: 'application/json' },
     });
     return res.json();
   }
 
   async _postJSON(path: string, data: Record<string, any> = {}): Promise<Response> {
     return await this._fetch(path, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
@@ -43,7 +43,7 @@ class APIClient {
   }
 
   async sendTimingReadsAsJSON(TimingReads: Array<TimingRead>): Promise<Response> {
-    return this._postJSON("/services/trackping/api/v1/timing_input/pings", TimingReads);
+    return this._postJSON('/services/trackping/api/v1/timing_input/pings', TimingReads);
   }
 
   async getTimingReads(query: {
@@ -54,7 +54,7 @@ class APIClient {
     firstReceive?: string;
     lastReceive?: string;
   }): Promise<Array<StoredTimingRead>> {
-    return this._getJSON(withQuery("/services/trackping/api/v1/timing_output/pings", query));
+    return this._getJSON(withQuery('/services/trackping/api/v1/timing_output/pings', query));
   }
 }
 

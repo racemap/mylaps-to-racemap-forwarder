@@ -1,0 +1,9 @@
+@import './base.css';
+
+body {
+  background-image: url('./background.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: repeat;
+  margin: 0;
+}

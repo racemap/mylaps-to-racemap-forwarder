@@ -1,7 +1,7 @@
-import type net from "node:net";
-import type MyLapsForwarder from "./forwarder";
+import type net from 'node:net';
+import type MyLapsForwarder from './forwarder';
 
-export type MyLapsClientVersions = "v1.0" | "v2.1";
+export type MyLapsClientVersions = 'v1.0' | 'v2.1';
 
 export type TimingRead = {
   timestamp: string; // Millis since EPOCH
@@ -77,28 +77,28 @@ export type MyLapsDevice = {
 
 export type MyLapsDeviceKeys = keyof MyLapsDevice;
 export type MyLapsDeviceShortKeys =
-  | "id"
-  | "n"
-  | "dt"
-  | "nr"
-  | "mac"
-  | "bat"
-  | "tbsc"
-  | "prof"
-  | "ant"
-  | "fwv"
-  | "bvol"
-  | "btyp"
-  | "cont"
-  | "gho"
-  | "ex1ho"
-  | "ex2ho"
-  | "temp"
-  | "dst"
-  | "gpsc"
-  | "gpsx"
-  | "gpsy"
-  | "tz";
+  | 'id'
+  | 'n'
+  | 'dt'
+  | 'nr'
+  | 'mac'
+  | 'bat'
+  | 'tbsc'
+  | 'prof'
+  | 'ant'
+  | 'fwv'
+  | 'bvol'
+  | 'btyp'
+  | 'cont'
+  | 'gho'
+  | 'ex1ho'
+  | 'ex2ho'
+  | 'temp'
+  | 'dst'
+  | 'gpsc'
+  | 'gpsx'
+  | 'gpsy'
+  | 'tz';
 
 export type MyLapsPassing = {
   chipCode?: string;
@@ -127,27 +127,27 @@ export type MyLapsPassing = {
 export type MyLapsPassingKeys = keyof MyLapsPassing;
 
 export type MyLapsPassingShortKeys =
-  | "c"
-  | "ct"
-  | "d"
-  | "l"
-  | "dv"
-  | "re"
-  | "an"
-  | "g"
-  | "b"
-  | "n"
-  | "t"
-  | "ut"
-  | "utc"
-  | "h"
-  | "ts"
-  | "bid"
-  | "am"
-  | "amd"
-  | "dm"
-  | "ans"
-  | "ana";
+  | 'c'
+  | 'ct'
+  | 'd'
+  | 'l'
+  | 'dv'
+  | 're'
+  | 'an'
+  | 'g'
+  | 'b'
+  | 'n'
+  | 't'
+  | 'ut'
+  | 'utc'
+  | 'h'
+  | 'ts'
+  | 'bid'
+  | 'am'
+  | 'amd'
+  | 'dm'
+  | 'ans'
+  | 'ana';
 
 export type TState = {
   aTCPClient: net.Socket | null;
