@@ -1,4 +1,3 @@
-import { Tabs, type TabsProps } from 'antd';
 import styled from 'styled-components';
 import RacemapBaseSection from './RacemapBaseSection';
 import type { API } from 'src/preload';

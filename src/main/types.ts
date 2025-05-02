@@ -191,7 +191,7 @@ export type MyLapsMarker = {
 };
 
 export type MyLapsMarkerKeys = keyof MyLapsMarker;
-export type MyLapsMarkerShortKeys = "mt" | "t" | "n";
+export type MyLapsMarkerShortKeys = 'mt' | 't' | 'n';
 
 export type TState = {
   aTCPClient: net.Socket | null;
