@@ -85,15 +85,18 @@ export const removeCertainBytesFromBuffer = (bytesToCheckForRemoval: Array<Remov
   const tempBuffer = Buffer.alloc(buffer.length);
   let j = 0;
   for (let i = 0; i < buffer.length; i++) {
+    let skipByte = false;
     for (let k = 0; k < bytesToCheckForRemoval.length; k++) {
       if (buffer[i] === bytesToCheckForRemoval[k]) {
         // skip this byte
+        skipByte = true;
         continue;
       }
-    }  
-    // if we reach here, it means the byte is not in the bytesToCheckForRemoval array
-    tempBuffer[j] = buffer[i];
-    j++;     
+    }
+    if (!skipByte) {
+      tempBuffer[j] = buffer[i];
+      j++;
+    }
   }
   const resultBuffer = Buffer.alloc(j);
   tempBuffer.copy(resultBuffer, 0, 0, j);
