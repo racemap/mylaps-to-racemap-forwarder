@@ -12,7 +12,7 @@ import {
   storeIncomingRawData,
   myLapsLagacyPassingToRead,
   myLapsPassingToRead,
-  removeZeroBytesFromBuffer,
+  removeCertainBytesFromBuffer,
 } from "../src/functions";
 
 const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST ?? "https://racemap.com";
@@ -121,10 +121,24 @@ test("Ava is running, fixtures and state exists", async (t) => {
   t.not(state, null);
 });
 
-test("Test function removeZeroBytesFromBuffer", (t) => {
+test("Test function removeCertainBytesFromBuffer", (t) => {
   const raw = Buffer.from([0x00, 0x00, 0x32, 0x33, 0x00, 0x34]);
-  const filtered = removeZeroBytesFromBuffer(raw);
-  t.deepEqual(filtered, Buffer.from([0x32, 0x33, 0x34]), "should remove zero bytes (0x00, 0x31, 0x00, 0x32) => (0x31, 0x32)");
+  const filtered = removeCertainBytesFromBuffer([0x00], raw);
+  t.deepEqual(filtered, Buffer.from([0x32, 0x33, 0x34]), "should remove 0x00 bytes (0x00, 0x31, 0x00, 0x32) => (0x31, 0x32)");
+
+  const raw2 = Buffer.from([0x0a, 0x0a, 0x32, 0x33, 0x0a, 0x34]);
+  const filtered2 = removeCertainBytesFromBuffer([0x0a], raw);
+  t.deepEqual(filtered2, Buffer.from([0x32, 0x33, 0x34]), "should remove 0x0a bytes (0x0a, 0x31, 0x0a, 0x32) => (0x31, 0x32)");
+
+  const raw3 = Buffer.from([0x0d, 0x0d, 0x32, 0x33, 0x0d, 0x34]);
+  const filtered3 = removeCertainBytesFromBuffer([0x0d], raw);
+  t.deepEqual(filtered3, Buffer.from([0x32, 0x33, 0x34]), "should remove 0x0d bytes (0x0d, 0x31, 0x0d, 0x32) => (0x31, 0x32)");
+
+
+  const raw4 = Buffer.from([0x00, 0x0a, 0x32, 0x33, 0x0d, 0x34]);
+  const filtered4 = removeCertainBytesFromBuffer([0x00, 0x0a, 0x0d], raw);
+  t.deepEqual(filtered4, Buffer.from([0x32, 0x33, 0x34]), "should remove 0x00 and 0x0a and 0x0d bytes (0x00, 0x0a, 0x31, 0x0d, 0x32) => (0x31, 0x32)");
+
 });
 
 test("Test function myLapsLagacyPassingToRead", (t) => {
