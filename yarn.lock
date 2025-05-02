@@ -6153,6 +6153,7 @@ __metadata:
     prettier: "npm:3.3.3"
     react: "npm:^19.1.0"
     react-dom: "npm:^19.1.0"
+    react-json-view-lite: "npm:^2.4.1"
     shortid: "npm:^2.2.16"
     styled-components: "npm:^6.1.17"
     typescript: "npm:^5.6.2"
@@ -7610,6 +7611,15 @@ __metadata:
   version: 18.3.1
   resolution: "react-is@npm:18.3.1"
   checksum: 10c0/f2f1e60010c683479e74c63f96b09fb41603527cd131a9959e2aee1e5a8b0caf270b365e5ca77d4a6b18aae659b60a86150bb3979073528877029b35aecd2072
+  languageName: node
+  linkType: hard
+
+"react-json-view-lite@npm:^2.4.1":
+  version: 2.4.1
+  resolution: "react-json-view-lite@npm:2.4.1"
+  peerDependencies:
+    react: ^18.0.0 || ^19.0.0
+  checksum: 10c0/cc171d8cca04683b97292ffdd8bad4970d77ccb929ed1eff3d40d46893c69e569226742f3330c090be88f894bd8e97352286ff16989c1e765f9fda487ca44ee8
   languageName: node
   linkType: hard
 

@@ -32,7 +32,8 @@
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
     "antd": "^5.24.8",
-    "electron-updater": "^6.3.9"
+    "electron-updater": "^6.3.9",
+    "react-json-view-lite": "^2.4.1"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",

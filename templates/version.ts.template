@@ -3,7 +3,15 @@
   Do not touch! Line will be modded by git hook triggered script scripts/handle-git-version.mjs
 */
 
-export const MyLapsToRacemapForwarderVersion = {
+export type ServiceVersion = {
+	gitProjectName: string;
+	gitBuildDate: string;
+	gitHeadHash: string;
+	gitBranch: string;
+	gitTag: string;
+};
+
+export const MyLapsToRacemapForwarderVersion: ServiceVersion = {
   gitProjectName: 'GIT_PROJECT_NAME',
   gitBuildDate: 'GIT_BUILD_DATE',
   gitHeadHash: 'GIT_HEAD_HASH',

@@ -4,7 +4,7 @@ import shortId from 'shortid';
 import APIClient from './api-client';
 import { BaseClass } from './base-class';
 import { MyLapsToRacemapForwarderVersion } from './version';
-import type { ExtendedSocket, LocationUpdate, MessageParts, MyLapsDevice, MyLapsLocation, TimingRead } from './types';
+import type { ExtendedSocket, ForwarderState, LocationUpdate, MessageParts, MyLapsDevice, MyLapsLocation, TimingRead } from './types';
 import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, RacemapMyLapsServerName } from './consts';
 import {
   log,
@@ -18,6 +18,7 @@ import {
   myLapsLagacyPassingToRead,
   myLapsDeviceToObject,
 } from './functions';
+import { updateServerState } from './state';
 
 const MAX_MESSAGE_DATA_DELAY_IN_MS = 500;
 
@@ -44,6 +45,29 @@ class MyLapsForwarder extends BaseClass {
     this._apiClient = new APIClient({ 'api-token': apiToken });
     this._server = this._configureReceiverSocket(listenPort, justLocalHost ? '127.0.0.1' : '0.0.0.0');
   }
+
+  getForwarderState = (): ForwarderState => {
+    const connections = Array.from(this._connections.values()).map((socket) => ({
+      id: socket.id,
+      userId: socket.userId,
+      sourceIP: socket.remoteAddress ?? '',
+      sourcePort: socket.remotePort ?? -1,
+      openedAt: socket.openedAt,
+      identified: socket.identified,
+      locations: Object.keys(socket.meta.locations),
+    }));
+
+    return {
+      version: MyLapsToRacemapForwarderVersion,
+      connections,
+    };
+  };
+
+  updateElectronState = () => {
+    updateServerState({
+      myLapsForwarder: this.getForwarderState(),
+    });
+  };
 
   lastReveivedMessages = (socketId: string): Array<string> => {
     const socket = this._connections.get(socketId);
@@ -82,6 +106,8 @@ class MyLapsForwarder extends BaseClass {
 
     this._connections.set(socket.id, socket); // The server knows its sockets
 
+    this.updateElectronState();
+
     // scope is MyLapsForwarder
     socket.on('error', (error: Error) => {
       if (error != null) {
@@ -89,6 +115,7 @@ class MyLapsForwarder extends BaseClass {
         clearIntervalTimer(socket.keepAliveTimerHandle);
         clearIntervalTimer(socket.triggerStartTransmissionHandle);
         this._connections.delete(socket.id);
+        this.updateElectronState();
       }
     });
 
@@ -98,6 +125,7 @@ class MyLapsForwarder extends BaseClass {
       clearIntervalTimer(socket.keepAliveTimerHandle);
       clearIntervalTimer(socket.triggerStartTransmissionHandle);
       this._connections.delete(socket.id);
+      this.updateElectronState();
     });
 
     socket.on('data', (data: Buffer) => {
@@ -194,6 +222,7 @@ class MyLapsForwarder extends BaseClass {
         };
       }
     }
+    this.updateElectronState();
   };
 
   _createOrUpdateLocation = (refToSocket: ExtendedSocket, update: LocationUpdate): void => {
@@ -218,6 +247,7 @@ class MyLapsForwarder extends BaseClass {
     if (update.deviceUpdate != null) {
       this._createOrUpdateDevice(location, update.deviceUpdate);
     }
+    this.updateElectronState();
   };
 
   // When the incoming stream is:  Toolkit@GetLocations@ln=Start@ln=5K@ln=Finish@$

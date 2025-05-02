@@ -1,32 +1,22 @@
-import { Tabs, type TabsProps } from "antd";
-import styled from "styled-components";
-import RacemapBaseSection from "./RacemapBaseSection";
+import { Tabs, type TabsProps } from 'antd';
+import styled from 'styled-components';
+import RacemapBaseSection from './RacemapBaseSection';
+import type { API } from 'src/preload';
+
+// define api for window object
+declare global {
+  interface Window {
+    api: API;
+  }
+}
 
 const App = () => {
-	const items: TabsProps["items"] = [
-		{
-			key: "1",
-			label: "MyLaps",
-			children: "Content of Tab Pane 1",
-		},
-		{
-			key: "2",
-			label: "ChronoTrack",
-			children: "Content of Tab Pane 2",
-		},
-		{
-			key: "3",
-			label: "RaceTec",
-			children: "Content of Tab Pane 3",
-		},
-	];
-	return (
-		<Container>
-			<h1>2 Racemap Forwarder</h1>
-			<RacemapBaseSection />
-			<Tabs defaultActiveKey="1" items={items} />
-		</Container>
-	);
+  return (
+    <Container>
+      <h1>2 Racemap Forwarder</h1>
+      <RacemapBaseSection />
+    </Container>
+  );
 };
 
 const Container = styled.div`
