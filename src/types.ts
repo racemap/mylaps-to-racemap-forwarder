@@ -149,6 +149,15 @@ export type MyLapsPassingShortKeys =
   | "ans"
   | "ana";
 
+export type MyLapsMarker = {
+  markerType?: string;
+  time?: string;
+  markerName?: string;
+};
+
+export type MyLapsMarkerKeys = keyof MyLapsMarker;
+export type MyLapsMarkerShortKeys = "mt" | "t" | "n";
+
 export type TState = {
   aTCPClient: net.Socket | null;
   forwarder: MyLapsForwarder | null;

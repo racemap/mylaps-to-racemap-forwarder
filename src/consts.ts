@@ -17,6 +17,8 @@ export const MyLapsFunctions = {
   AckGetInfo: "AckGetInfo",
   Passing: "Passing",
   AckPassing: "AckPassing",
+  Marker: "Marker",
+  AckMarker: "AckMarker",
   GetLocations: "GetLocations",
 };
 

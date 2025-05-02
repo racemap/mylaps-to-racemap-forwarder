@@ -13,12 +13,16 @@ import type {
   MyLapsDevice,
   MyLapsDeviceKeys,
   MyLapsDeviceShortKeys,
+  MyLapsMarker,
+  MyLapsMarkerKeys,
+  MyLapsMarkerShortKeys,
   MyLapsPassing,
   MyLapsPassingKeys,
   MyLapsPassingShortKeys,
   TimingRead,
 } from "./types";
 import moment from "moment";
+import { buffer } from "node:stream/consumers";
 
 type TArgs = Array<unknown>;
 
@@ -73,6 +77,19 @@ export const processStoredData = (aBufferToProcess: BufferObject, messageHandler
       if (messageHandler != null && typeof messageHandler === "function") messageHandler(aMessage);
     }
   }
+};
+
+export const removeZeroBytesFromBuffer = (buffer: Buffer): Buffer => {
+  const tempBuffer = Buffer.alloc(buffer.length);
+  let j = 0;
+  for (let i = 0; i < buffer.length; i++) {
+    if (buffer[i] !== 0x00) {
+      tempBuffer[j++] = buffer[i];
+    }
+  }
+  const resultBuffer = Buffer.alloc(j);
+  tempBuffer.copy(resultBuffer, 0, 0, j);
+  return resultBuffer;
 };
 
 // check if the port is already in use
@@ -191,6 +208,37 @@ export function myLapsLagacyPassingToRead(locationName: string, passingDetails: 
     return read;
   }
   return null;
+}
+
+// to parse messages like this
+// Start@Marker@t=11:03:40.347|mt=Gunshot|n=Gunshot 1@4@$
+export function myLapsMarkerToRead(locationName: string, markerDetails: string): TimingRead | null {
+  const markerDetailsArray = markerDetails.split("|");
+  const marker: MyLapsMarker = {};
+  for (const detail of markerDetailsArray) {
+    const [key, value] = detail.split("=");
+    marker[myLapsMarkerKeyToName(key as MyLapsMarkerShortKeys)] = value;
+  }
+  return {
+    timingId: locationName,
+    timestamp: moment.utc(marker.time, "hh:mm:ss.SSS").toISOString(),
+    timingName: marker.markerName,
+    chipId: "",
+  };
+}
+
+export function myLapsMarkerKeyToName(key: MyLapsMarkerShortKeys): MyLapsMarkerKeys {
+  switch (key) {
+    case "mt":
+      return "markerType";
+    case "t":
+      return "time";
+    case "n":
+      return "markerName";
+    default:
+      console.warn("Unknown key:", key);
+  }
+  return key;
 }
 
 // reads stuff like this

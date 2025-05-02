@@ -12,6 +12,7 @@ import {
   storeIncomingRawData,
   myLapsLagacyPassingToRead,
   myLapsPassingToRead,
+  removeZeroBytesFromBuffer,
 } from "../src/functions";
 
 const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST ?? "https://racemap.com";
@@ -120,8 +121,15 @@ test("Ava is running, fixtures and state exists", async (t) => {
   t.not(state, null);
 });
 
+test("Test function removeZeroBytesFromBuffer", (t) => {
+  const raw = Buffer.from([0x00, 0x00, 0x32, 0x33, 0x00, 0x34]);
+  const filtered = removeZeroBytesFromBuffer(raw);
+  t.deepEqual(filtered, Buffer.from([0x32, 0x33, 0x34]), "should remove zero bytes (0x00, 0x31, 0x00, 0x32) => (0x31, 0x32)");
+});
+
 test("Test function myLapsLagacyPassingToRead", (t) => {
   const read = myLapsLagacyPassingToRead("Start", fixtures.legacyPassingString);
+
   t.not(read, null, "read should not be null");
   t.is(read?.chipId, `${MyLapsPrefix}KV86583`, "chipId should be KV86583");
   t.is(read?.timingId, "Start", "timingId should be Start");
@@ -231,6 +239,11 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
               break;
             }
 
+            case MyLapsFunctions.AckMarker: {
+              t.log("AckMarker from server. Nice.");
+              break;
+            }
+
             default: {
               console.warn(`MyLabsTestClient Unknown command from server. ${myLabsFunction}`);
               break;
@@ -298,7 +311,6 @@ test("it should be possible to send 3 passings for every location to the server"
 });
 
 test("the server should have responded with AckPassing for every passing", async (t) => {
-  t.log("server messages", state.fromServerMessages);
   t.not(state.fromServerMessages, null, "server messages should not be null");
   t.true(state.fromServerMessages.length > 0, "server messages should have some content");
   const ackPassing = state.fromServerMessages.filter((message) => message.includes(MyLapsFunctions.AckPassing));
@@ -307,6 +319,43 @@ test("the server should have responded with AckPassing for every passing", async
     const ack = ackPassing.find((message) => message.includes(attempt));
     t.not(ack, undefined, `server should have responded with AckPassing for attempt ${attempt}`);
   }
+});
+
+test("it should be possibel to send 3 markers to the server", async (t) => {
+  t.not(state.aTCPClient, null, "tcp client is not null");
+  if (state.aTCPClient != null) {
+    const attempt = Math.round(100 * Math.random()).toString();
+    const marker = [
+      fixtures.locations[0].name,
+      MyLapsFunctions.Marker,
+      [
+        `${MyLapsIdentifiers.MarkerParameters.Time}=11:03:40.347`,
+        `${MyLapsIdentifiers.MarkerParameters.Type}=Gunshot`,
+        `${MyLapsIdentifiers.MarkerParameters.Name}=Gunshot 1`,
+      ].join("|"),
+      [
+        `${MyLapsIdentifiers.MarkerParameters.Time}=11:03:41.327`,
+        `${MyLapsIdentifiers.MarkerParameters.Type}=Gunshot`,
+        `${MyLapsIdentifiers.MarkerParameters.Name}=Gunshot 2`,
+      ].join("|"),
+      [
+        `${MyLapsIdentifiers.MarkerParameters.Time}=11:03:42.141`,
+        `${MyLapsIdentifiers.MarkerParameters.Type}=Gunshot`,
+        `${MyLapsIdentifiers.MarkerParameters.Name}=Gunshot 3`,
+      ].join("|"),
+      attempt,
+    ];
+    t.true(state.aTCPClient.sendData(marker), "it should be possible to write a marker message to the socket");
+    await sleep(500);
+  }
+});
+
+test("the server should have responded with AckMarker for the last marker telegram", async (t) => {
+  t.log("server messages", state.fromServerMessages);
+  t.not(state.fromServerMessages, null, "server messages should not be null");
+  t.true(state.fromServerMessages.length > 0, "server messages should have some content");
+  const ackMarker = state.fromServerMessages.find((message) => message.includes(MyLapsFunctions.AckMarker));
+  t.not(ackMarker, undefined, "server should have responded with AckMarker");
 });
 
 test("should wait 20 seconds before kill", async (t) => {

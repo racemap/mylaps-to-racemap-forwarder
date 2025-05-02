@@ -4,7 +4,7 @@ import shortId from "shortid";
 import APIClient from "./api-client";
 import { BaseClass } from "./base-class";
 import { MyLapsToRacemapForwarderVersion } from "./version";
-import type { ExtendedSocket, LocationUpdate, MessageParts, MyLapsDevice, MyLapsLocation, TimingRead } from "./types";
+import type { ExtendedSocket, LocationUpdate, MessageParts, MyLapsDevice, MyLapsLocation, MyLapsMarker, TimingRead } from "./types";
 import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, RacemapMyLapsServerName } from "./consts";
 import {
   log,
@@ -17,6 +17,8 @@ import {
   storeIncomingRawData,
   myLapsLagacyPassingToRead,
   myLapsDeviceToObject,
+  myLapsMarkerToRead,
+  removeZeroBytesFromBuffer,
 } from "./functions";
 
 const MAX_MESSAGE_DATA_DELAY_IN_MS = 500;
@@ -102,7 +104,7 @@ class MyLapsForwarder extends BaseClass {
 
     socket.on("data", (data: Buffer) => {
       try {
-        storeIncomingRawData(data, socket.cache, MAX_MESSAGE_DATA_DELAY_IN_MS);
+        storeIncomingRawData(removeZeroBytesFromBuffer(data), socket.cache, MAX_MESSAGE_DATA_DELAY_IN_MS);
         processStoredData(socket.cache, (message) => {
           this._handleRawMessage(socket, message);
         });
@@ -376,6 +378,28 @@ class MyLapsForwarder extends BaseClass {
             if (refToSocket.meta.locations[locationName] != null) {
               refToSocket.meta.locations[locationName].lastSeen = new Date();
             }
+            break;
+          }
+
+          case MyLapsFunctions.Marker: {
+            console.log("Marker", parts);
+            const locationName = parts[0];
+            if (len > 4) {
+              const markers: Array<TimingRead> = [];
+              const counter = Number.parseInt(parts[len - 2]);
+              if (counter > 0) {
+                for (let i = 2; i < len - 2; i++) {
+                  const marker = myLapsMarkerToRead(locationName, parts[i]);
+                  if (marker != null) {
+                    markers.push(marker);
+                  }
+                }
+              }
+              // we always answer with the counter
+              warn(`We received ${markers.length} Markers. But do not know what to do with them. So we drop them`);
+              refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckMarker, counter.toString()]);
+            }
+
             break;
           }
 
