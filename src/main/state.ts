@@ -7,7 +7,9 @@ import type { ServerState } from '../types';
 import pick from 'lodash/pick';
 import { EmptyServerState } from '../consts';
 
-const userDataPath = app.getPath('userData');
+const isElectron = !!process.versions?.electron;
+
+const userDataPath = isElectron ? app.getPath('userData') : __dirname;
 const storagePath = path.join(userDataPath, 'config.json');
 
 let refToElectronWebContents: Electron.WebContents | null = null;
