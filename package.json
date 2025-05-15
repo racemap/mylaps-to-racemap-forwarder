@@ -14,7 +14,7 @@
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "test": "yarn build && dotenv-load ava .build/test-mylaps-forwarder.js",
-    "bundle": "yarn build && pkg --compress brotli -t node18-win-x64,node18-linux-x64,node18-macos-x64 .build/mylaps-to-racemap-forwarder.js --out-path .bin",
+    "bundle": "yarn build-linux && yarn build-mac && yarn build-win",
     "release": "yarn bundle && node ./scripts/rename-binaries.mjs",
     "pretty": "prettier --write .",
     "preinstall": "node ./scripts/edit-git-config.mjs && git checkout",
