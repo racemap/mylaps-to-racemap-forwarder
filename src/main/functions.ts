@@ -31,6 +31,8 @@ type BufferObject = {
   name?: string;
 };
 
+let refToElectronWebContents: Electron.WebContents | null = null;
+
 export const storeIncomingRawData = (incomingData: Buffer, aBufferObject: BufferObject, maxMessageDataDelayInMilis = 200): void => {
   const newBufferlength: number = aBufferObject.buffer.length + incomingData.length;
   const now: number = Date.now();
@@ -116,25 +118,38 @@ export const now = (): string => {
   return new Date().toISOString().split('T')[1].split('Z')[0];
 };
 
+const internal = (...args: TArgs): void => {
+  console.log(...args);
+  if (refToElectronWebContents != null) {
+    const formatted = args.map((arg) => (typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg))).join(' ');
+
+    refToElectronWebContents.send('onNewStdOutLine', formatted);
+  }
+};
+
 export const log = (...args: TArgs): void => {
-  console.log(now(), 'Log:    ', ...args);
+  internal(now(), 'Log:    ', ...args);
 };
 
 export const info = (...args: TArgs): void => {
-  console.log(now(), 'Info:   \x1b[34m', ...args, '\x1b[0m');
+  internal(now(), 'Info:   \x1b[34m', ...args, '\x1b[0m');
 };
 
 export const warn = (...args: TArgs): void => {
-  console.log(now(), 'Warning:\x1b[91m', ...args, '\x1b[0m');
+  internal(now(), 'Warning:\x1b[91m', ...args, '\x1b[0m');
 };
 
 export const error = (...args: TArgs): void => {
-  console.log(now(), 'Error:  \x1b[31m', ...args, '\x1b[0m');
+  internal(now(), 'Error:  \x1b[31m', ...args, '\x1b[0m');
 };
 
 export const success = (...args: TArgs): void => {
-  console.log(now(), 'Success:\x1b[32m', ...args, '\x1b[0m');
+  internal(now(), 'Success:\x1b[32m', ...args, '\x1b[0m');
 };
+
+export function prepareLogger(webContents: Electron.WebContents): void {
+  refToElectronWebContents = webContents;
+}
 
 export function connectTcpSocket(ip: string, port: number): Promise<ExtendedSocket> {
   return new Promise((resolve, reject) => {

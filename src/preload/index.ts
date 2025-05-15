@@ -20,8 +20,20 @@ const api = {
       callback(serverState);
     });
   },
+
   removeServerStateChangeListener: (callback) => {
     ipcRenderer.removeListener('onServerStateChange', callback);
+  },
+
+  onNewStdOutLine: (callback: (serverState: string) => void) => {
+    console.log('onNewStdOutLine');
+    ipcRenderer.on('onNewStdOutLine', (_event, line: string) => {
+      callback(line);
+    });
+  },
+
+  removeOnNewStdOutLineListener: (callback) => {
+    ipcRenderer.removeListener('onNewStdOutLine', callback);
   },
 };
 

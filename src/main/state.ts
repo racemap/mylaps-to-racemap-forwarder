@@ -37,7 +37,7 @@ export async function upgradeAPIToken(apiToken: string): Promise<boolean> {
   });
   serverState.apiTokenIsValid = (await apiClient.checkToken()) ?? false;
   if (serverState.apiTokenIsValid) {
-    serverState.events = await apiClient.getMyEvents();
+    serverState.events = []; // await apiClient.getMyEvents();
   } else {
     serverState.events = [];
     serverState.user = null;

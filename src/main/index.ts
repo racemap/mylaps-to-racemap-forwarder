@@ -4,7 +4,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'node:path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { MyLapsToRacemapForwarderVersion } from './version';
-import { info, log, printEnvVar } from './functions';
+import { info, log, prepareLogger, printEnvVar } from './functions';
 import { getServerState, prepareServerState, saveServerState, upgradeAPIToken, serverState } from './state';
 
 async function bootup() {
@@ -78,7 +78,6 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window);
   });
 
-  // IPC testlog(`Handle upgrade API Token ${apiToken}`);
   ipcMain.on('ping', () => console.log('pong'));
 
   ipcMain.handle('upgradeAPIToken', async (_invokeEvent, apiToken) => {
@@ -97,6 +96,7 @@ app.whenReady().then(async () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 
+  prepareLogger(mainWindow.webContents);
   prepareServerState(mainWindow.webContents);
 
   await bootup();

@@ -11,6 +11,7 @@ import styled from 'styled-components';
 
 const RacemapBaseSection = (): React.ReactNode => {
   const [appState, setAppState] = React.useState<ServerState>(EmptyServerState);
+  const [stdout, setStdout] = React.useState<Array<string>>([]);
 
   const onTokenChange = async (newToken: string) => {
     const newAppState = {
@@ -42,11 +43,17 @@ const RacemapBaseSection = (): React.ReactNode => {
       setAppState(serverState);
     };
 
+    const newStdOutLineHandler = (newLine: string) => {
+      setStdout((prev) => [newLine, ...prev].slice(0, 500));
+    };
+
     // Listen to server state changes
     window.api.onServerStateChange(stateChangeHandler);
+    window.api.onNewStdOutLine(newStdOutLineHandler);
 
     return () => {
       window.api.removeServerStateChangeListener(stateChangeHandler);
+      window.api.removeOnNewStdOutLineListener(newStdOutLineHandler);
     };
   }, []);
 
@@ -128,7 +135,7 @@ const RacemapBaseSection = (): React.ReactNode => {
           </StateDetailsContainer>
         </Col>
       </Row>
-      <TimingSystemTabs appState={appState} />
+      <TimingSystemTabs appState={appState} logLines={stdout} />
     </>
   );
 };
