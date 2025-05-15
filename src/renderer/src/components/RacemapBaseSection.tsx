@@ -1,23 +1,16 @@
 import React from 'react';
 import { api } from '@renderer/api';
 import { Col, Flex, Input, Row, Select } from 'antd';
-import type { ServerState } from 'src/main/types';
+import type { ServerState } from '../../../types';
+import { EmptyServerState } from '../../../consts';
 import { EyeTwoTone, DoubleRightOutlined, EyeInvisibleOutlined, CheckCircleTwoTone, InfoCircleTwoTone } from '@ant-design/icons';
 import { JsonView } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 import { TimingSystemTabs } from './TimingSystemsTabs';
+import styled from 'styled-components';
 
 const RacemapBaseSection = (): React.ReactNode => {
-  const [appState, setAppState] = React.useState<ServerState>({
-    apiToken: '',
-    apiTokenIsValid: false,
-    events: [],
-    user: null,
-    myLapsForwarder: {
-      version: null,
-      connections: [],
-    },
-  });
+  const [appState, setAppState] = React.useState<ServerState>(EmptyServerState);
 
   const onTokenChange = async (newToken: string) => {
     const newAppState = {
@@ -59,8 +52,12 @@ const RacemapBaseSection = (): React.ReactNode => {
 
   return (
     <>
+      <Flex gap={'8px'} justify="space-between" align="baseline">
+        <h1>2 Racemap Forwarder</h1>
+        <span>{appState.version?.gitTag.split('_')[0]}</span>
+      </Flex>
       <Row>
-        <Col span={15}>
+        <Col span={13}>
           <h2>Racemap API Token</h2>
           <Flex gap="middle" align="start">
             <Input.Password
@@ -81,7 +78,9 @@ const RacemapBaseSection = (): React.ReactNode => {
               />
             )}
           </Flex>
-
+          <TinyExplaination>
+            The token gives you access to your Racemap Account. It's <strong>required</strong>.
+          </TinyExplaination>
           <h2>Select Racemap Event</h2>
           <Flex gap="middle" align="start">
             <Select
@@ -117,10 +116,16 @@ const RacemapBaseSection = (): React.ReactNode => {
               />
             )}
           </Flex>
+          <TinyExplaination>
+            To select an event is <strong>optional</strong>. When using gun-times they will be assigned to the participants listed in the event.
+            Otherwise the gun-times will be dropped.
+          </TinyExplaination>
         </Col>
-        <Col span={8} offset={1}>
+        <Col span={10} offset={1}>
           <h2>State</h2>
-          <JsonView data={appState} />
+          <StateDetailsContainer>
+            <JsonView data={appState} />
+          </StateDetailsContainer>
         </Col>
       </Row>
       <TimingSystemTabs appState={appState} />
@@ -129,3 +134,14 @@ const RacemapBaseSection = (): React.ReactNode => {
 };
 
 export default RacemapBaseSection;
+
+const StateDetailsContainer = styled.div`
+  height: 210px;
+  overflow-y: scroll;
+`;
+
+const TinyExplaination = styled.p`
+  margin-left: 10px;
+  font-size: 12px;
+  color: #888;
+`;

@@ -21,7 +21,7 @@ import type {
   MyLapsDeviceShortKeys,
   MyLapsMarkerShortKeys,
   MyLapsPassingShortKeys,
-} from './types';
+} from '../types';
 
 type TArgs = Array<unknown>;
 
@@ -89,7 +89,6 @@ export const removeCertainBytesFromBuffer = (bytesToCheckForRemoval: Array<Remov
       if (buffer[i] === bytesToCheckForRemoval[k]) {
         // skip this byte
         skipByte = true;
-        continue;
       }
     }
     if (!skipByte) {

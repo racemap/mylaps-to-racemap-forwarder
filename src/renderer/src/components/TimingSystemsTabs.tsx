@@ -1,5 +1,5 @@
 import { Tabs, type TabsProps } from 'antd';
-import type { ServerState } from 'src/main/types';
+import type { ServerState } from '../../../types';
 import { MyLapsForwarderDetails } from './MyLapsForwarderDetails';
 
 type TimingSystemTabsProps = {
@@ -10,17 +10,17 @@ export const TimingSystemTabs = ({ appState }: TimingSystemTabsProps) => {
   const items: TabsProps['items'] = [
     {
       key: '1',
-      label: 'MyLaps',
+      label: 'From MyLaps',
       children: <MyLapsForwarderDetails forwarderState={appState.myLapsForwarder} />,
     },
     {
       key: '2',
-      label: 'ChronoTrack',
+      label: 'From ChronoTrack',
       children: 'Content of Tab Pane 2',
     },
     {
       key: '3',
-      label: 'RaceTec',
+      label: 'From RaceTec',
       children: 'Content of Tab Pane 3',
     },
   ];

@@ -1,6 +1,6 @@
 import type net from 'node:net';
-import type MyLapsForwarder from './forwarder';
-import type { ServiceVersion } from './version';
+import type MyLapsForwarder from './main/forwarder';
+import type { ServiceVersion } from './main/version';
 
 export type RacemapEvent = {
   id: string;
@@ -16,15 +16,18 @@ export type RacemapUser = {
 };
 
 export type ForwarderState = {
-  version: ServiceVersion | null;
+  listenHost: string;
+  listenPort: number;
+  forwardedReads: number;
   connections: Array<{
     id: string;
     userId: string;
     openedAt: Date;
     sourceIP: string;
     sourcePort: number;
+    forwardedReads: number;
     identified: boolean;
-    locations: Array<string>;
+    locations: Array<MyLapsLocation>;
   }>;
 };
 
@@ -33,6 +36,7 @@ export type ServerState = {
   apiTokenIsValid: boolean;
   events: Array<RacemapEvent>;
   user: RacemapUser | null;
+  version: ServiceVersion | null;
   myLapsForwarder: ForwarderState;
 };
 
@@ -220,6 +224,7 @@ export type ExtendedSocket = net.Socket & {
   sendData: (data: Array<string>) => boolean;
   sendObject: (object: Record<string, string>) => void;
   lastReceivedMessages: Array<string>;
+  forwardedReads: number;
 };
 
 export type MessageParts = Array<string>;

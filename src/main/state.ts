@@ -3,32 +3,22 @@ import path from 'node:path';
 import fs from 'node:fs';
 import APIClient from './api-client';
 import { log } from './functions';
-import type { ServerState } from './types';
+import type { ServerState } from '../types';
 import pick from 'lodash/pick';
-import { MyLapsToRacemapForwarderVersion } from './version';
+import { EmptyServerState } from '../consts';
 
 const userDataPath = app.getPath('userData');
 const storagePath = path.join(userDataPath, 'config.json');
 
 let refToElectronWebContents: Electron.WebContents | null = null;
-export const EmptyState: ServerState = {
-  apiToken: '',
-  apiTokenIsValid: false,
-  events: [],
-  user: null,
-  myLapsForwarder: {
-    version: MyLapsToRacemapForwarderVersion,
-    connections: [],
-  },
-};
 
 export let serverState: ServerState = {
-  ...EmptyState,
+  ...EmptyServerState,
   apiToken: process.env.RACEMAP_API_TOKEN ?? null,
 };
 
 function triggerStateChange(): void {
-  console.log('triggerStateChange', serverState);
+  console.log('triggerStateChange', serverState.myLapsForwarder);
   refToElectronWebContents?.send('onServerStateChange', serverState);
 }
 

@@ -1,8 +1,23 @@
+import type { ServerState } from './types';
 import { MyLapsToRacemapForwarderVersion } from './main/version';
 
 export const OneHourInMillis = 3600000; // 1 hour in milliseconds
 export const OneMinuteInMillis = 60000; // 1 minute in milliseconds
 export const OneSecondInMillis = 1000; // 1 second in milliseconds
+
+export const EmptyServerState: ServerState = {
+  apiToken: '',
+  apiTokenIsValid: false,
+  events: [],
+  user: null,
+  version: MyLapsToRacemapForwarderVersion,
+  myLapsForwarder: {
+    listenHost: '',
+    listenPort: -1,
+    forwardedReads: 0,
+    connections: [],
+  },
+};
 
 export const MyLapsPrefix = 'MyLaps_'; // MyLaps prefix for the transponder or chipIds
 

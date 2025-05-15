@@ -12,7 +12,6 @@ declare global {
 const App = () => {
   return (
     <Container>
-      <h1>2 Racemap Forwarder</h1>
       <RacemapBaseSection />
     </Container>
   );

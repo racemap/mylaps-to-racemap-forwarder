@@ -1,7 +1,7 @@
 import moment from 'moment';
 import MyLapsForwarder from '../src/main/forwarder';
 import { serial as test } from 'ava';
-import type { TTestState, TTestFixtures, TPredictionTestTimes } from '../src/main/types';
+import type { TTestState, TTestFixtures, TPredictionTestTimes } from '../src/types';
 import { CRLF, MyLapsPrefix, MyLapsFunctions, OneHourInMillis, MyLapsIdentifiers, OneSecondInMillis, MyLapsDataSeparator } from '../src/main/consts';
 import {
   sleep,

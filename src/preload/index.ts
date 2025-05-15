@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
 import type { upgradeAPIToken } from '../main/state';
 import type { getServerState } from '../main/state';
-import type { ServerState } from '../main/types';
+import type { ServerState } from '../types';
 
 // Custom APIs for renderer
 const api = {

@@ -1,22 +1,20 @@
 import icon from '../../resources/icon.png?asset';
-import APIClient from './api-client';
 import MyLapsForwarder from './forwarder';
 import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'node:path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { MyLapsToRacemapForwarderVersion } from './version';
-import { info, log, printEnvVar, success } from './functions';
-import { getServerState, prepareServerState, saveServerState, upgradeAPIToken } from './state';
-
-const RACEMAP_API_HOST = process.env.RCEMAP_API_HOST ?? 'https://racemap.com';
-const RACEMAP_API_TOKEN = process.env.RACEMAP_API_TOKEN ?? '';
-const LISTEN_MODE = process.env.LISTEN_MODE?.toLocaleLowerCase() ?? 'private';
-const LISTEN_PORT = Number.parseInt(process.env.LISTEN_PORT ?? '3097');
-const VERSION = MyLapsToRacemapForwarderVersion.gitTag.split('_')[0];
-const apiClient = new APIClient({ 'api-token': RACEMAP_API_TOKEN });
+import { info, log, printEnvVar } from './functions';
+import { getServerState, prepareServerState, saveServerState, upgradeAPIToken, serverState } from './state';
 
 async function bootup() {
-  log('Hello from mylaps-forwarder');
+  log('Hello from 2-racemap-forwarder');
+
+  const RACEMAP_API_HOST = process.env.RCEMAP_API_HOST ?? 'https://racemap.com';
+  const RACEMAP_API_TOKEN = serverState.apiToken ?? '';
+  const LISTEN_MODE = process.env.LISTEN_MODE?.toLocaleLowerCase() ?? 'private';
+  const LISTEN_PORT = Number.parseInt(process.env.LISTEN_PORT ?? '3097');
+  const VERSION = MyLapsToRacemapForwarderVersion.gitTag.split('_')[0];
 
   printEnvVar({ RACEMAP_API_HOST });
   printEnvVar({ RACEMAP_API_TOKEN });
@@ -29,23 +27,7 @@ async function bootup() {
     throw new Error(`Invalid listen mode. Please use either 'private' or 'public'`);
   }
 
-  info('Try to read users api token');
-  if (RACEMAP_API_TOKEN === '') {
-    throw new Error(`No api token found. 
-      - Please create an .env file and store your token there. 
-      - The token should look like this: RACEMAP_API_TOKEN=your-api-token
-      - You can get your api token from your racemap account profile section.`);
-  }
-  success('|-> Users api token is availible');
-  info('Try to check validyty of your API Token, sending an empty dataset.');
-
-  const isAvail = await apiClient.checkAvailibility();
-  if (isAvail) {
-    success('|-> API Token is valid');
-    new MyLapsForwarder(RACEMAP_API_TOKEN, LISTEN_PORT, LISTEN_MODE === 'private');
-  } else {
-    throw new Error('API Token is invalid. Please check your token and try again.');
-  }
+  new MyLapsForwarder(RACEMAP_API_TOKEN, LISTEN_PORT, LISTEN_MODE === 'private');
 }
 
 function createWindow(): BrowserWindow {
@@ -129,6 +111,3 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.

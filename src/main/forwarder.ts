@@ -4,8 +4,7 @@ import shortId from 'shortid';
 import APIClient from './api-client';
 import { BaseClass } from './base-class';
 import { updateServerState } from './state';
-import { MyLapsToRacemapForwarderVersion } from './version';
-import type { TimingRead, MessageParts, MyLapsDevice, ExtendedSocket, ForwarderState, LocationUpdate, MyLapsLocation } from './types';
+import type { TimingRead, MessageParts, MyLapsDevice, ExtendedSocket, ForwarderState, LocationUpdate, MyLapsLocation } from '../types';
 import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, RacemapMyLapsServerName } from './consts';
 import {
   log,
@@ -38,14 +37,46 @@ class MyLapsForwarder extends BaseClass {
   _connections: Map<string, ExtendedSocket> = new Map();
   _server: net.Server;
   _apiToken: string;
+  _listenHost: string;
+  _listenPort: number;
+  _forwardedReads = 0;
   _apiClient: APIClient;
 
   constructor(apiToken: string, listenPort: number, justLocalHost = true) {
     super();
 
     this._apiToken = apiToken;
-    this._apiClient = new APIClient({ 'api-token': apiToken });
-    this._server = this._configureReceiverSocket(listenPort, justLocalHost ? '127.0.0.1' : '0.0.0.0');
+    this._listenPort = listenPort;
+    this._listenHost = justLocalHost ? '127.0.0.1' : '0.0.0.0';
+    this._apiClient = new APIClient({ authorization: `Bearer ${this._apiToken}` });
+    this._server = this._configureReceiverSocket(this._listenPort, this._listenHost);
+
+    info('Try to read/find your Racemap API token');
+    if (this._apiToken === '') {
+      error(`No API token found. 
+      - Please add your API token in the main form.
+      - Or create an .env file and store your token there. 
+      - The token should look like this: RACEMAP_API_TOKEN=your-api-token
+      - You can get your api token from your racemap account profile section.`);
+    } else {
+      success('|-> Users api token is availible');
+    }
+
+    info('Check if your token is valid');
+    this._apiClient.checkToken().then((isValid) => {
+      updateServerState({
+        apiToken,
+        apiTokenIsValid: isValid,
+      });
+
+      if (isValid) {
+        success('|-> API Token is valid');
+      } else {
+        error('|-> API Token is invalid. Please check/update your token and try again.');
+      }
+    });
+
+    this.updateElectronState();
   }
 
   getForwarderState = (): ForwarderState => {
@@ -55,12 +86,15 @@ class MyLapsForwarder extends BaseClass {
       sourceIP: socket.remoteAddress ?? '',
       sourcePort: socket.remotePort ?? -1,
       openedAt: socket.openedAt,
+      forwardedReads: socket.forwardedReads,
       identified: socket.identified,
-      locations: Object.keys(socket.meta.locations),
+      locations: Object.values(socket.meta.locations),
     }));
 
     return {
-      version: MyLapsToRacemapForwarderVersion,
+      forwardedReads: this._forwardedReads,
+      listenHost: this._listenHost,
+      listenPort: this._listenPort,
       connections,
     };
   };
@@ -105,6 +139,14 @@ class MyLapsForwarder extends BaseClass {
     socket.keepAliveTimerHandle = null;
     socket.triggerStartTransmissionHandle = null;
     socket.lastReceivedMessages = [];
+    socket.forwardedReads = 0;
+    socket.meta = {
+      name: '',
+      version: 'v2.1',
+      connectionId: undefined,
+      locations: {},
+      clientRespondedAt: new Date(),
+    };
 
     this._connections.set(socket.id, socket); // The server knows its sockets
 
@@ -196,13 +238,6 @@ class MyLapsForwarder extends BaseClass {
     // we assume a client version of 2.1
     if (parts.length === 3 && (parts[1] === MyLapsFunctions.Ping || parts[1] === MyLapsFunctions.Pong)) {
       refToSocket.identified = true;
-      refToSocket.meta = {
-        name: '',
-        version: 'v2.1',
-        connectionId: undefined,
-        locations: {},
-        clientRespondedAt: new Date(),
-      };
 
       refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPong, '@Version2.1']);
       refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetLocations]);
@@ -371,12 +406,16 @@ class MyLapsForwarder extends BaseClass {
               }
               if (reads.length > 0) {
                 this._pushNonlocatedReadToRacemap(reads);
+                refToSocket.forwardedReads += reads.length;
+                this._forwardedReads += reads.length;
               }
             }
 
             if (refToSocket.meta.locations[locationName] != null) {
               refToSocket.meta.locations[locationName].lastSeen = new Date();
             }
+
+            this.updateElectronState();
             break;
           }
 
@@ -402,6 +441,8 @@ class MyLapsForwarder extends BaseClass {
               }
               if (reads.length > 0) {
                 this._pushNonlocatedReadToRacemap(reads);
+                refToSocket.forwardedReads += reads.length;
+                this._forwardedReads += reads.length;
               }
               refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckStore, counter.toString()]);
             }

@@ -1,5 +1,5 @@
 import withQuery from 'with-query';
-import type { StoredTimingRead, TimingRead, RacemapEvent } from './types';
+import type { StoredTimingRead, TimingRead, RacemapEvent } from '../types';
 import { error } from './functions';
 
 const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST || 'https://racemap.com';

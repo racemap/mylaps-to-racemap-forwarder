@@ -8,6 +8,7 @@ out
 
 # Builded stuff
 .build
+src/version.ts
 src/main/version.ts
 
 # Logs
