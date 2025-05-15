@@ -5,6 +5,7 @@ import APIClient from './api-client';
 import { log } from './functions';
 import type { ServerState } from './types';
 import pick from 'lodash/pick';
+import { MyLapsToRacemapForwarderVersion } from './version';
 
 const userDataPath = app.getPath('userData');
 const storagePath = path.join(userDataPath, 'config.json');
@@ -16,7 +17,7 @@ export const EmptyState: ServerState = {
   events: [],
   user: null,
   myLapsForwarder: {
-    version: null,
+    version: MyLapsToRacemapForwarderVersion,
     connections: [],
   },
 };

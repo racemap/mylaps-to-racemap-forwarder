@@ -3,6 +3,7 @@ import net from 'node:net';
 import shortId from 'shortid';
 import APIClient from './api-client';
 import { BaseClass } from './base-class';
+import { updateServerState } from './state';
 import { MyLapsToRacemapForwarderVersion } from './version';
 import type { TimingRead, MessageParts, MyLapsDevice, ExtendedSocket, ForwarderState, LocationUpdate, MyLapsLocation } from './types';
 import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, RacemapMyLapsServerName } from './consts';
@@ -20,7 +21,6 @@ import {
   myLapsLagacyPassingToRead,
   removeCertainBytesFromBuffer,
 } from './functions';
-import { updateServerState } from './state';
 
 const MAX_MESSAGE_DATA_DELAY_IN_MS = 500;
 

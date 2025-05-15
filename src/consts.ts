@@ -1,4 +1,4 @@
-import { MyLapsToRacemapForwarderVersion } from './version';
+import { MyLapsToRacemapForwarderVersion } from './main/version';
 
 export const OneHourInMillis = 3600000; // 1 hour in milliseconds
 export const OneMinuteInMillis = 60000; // 1 minute in milliseconds
