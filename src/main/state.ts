@@ -18,7 +18,6 @@ export let serverState: ServerState = {
 };
 
 function triggerStateChange(): void {
-  console.log('triggerStateChange', serverState.myLapsForwarder);
   refToElectronWebContents?.send('onServerStateChange', serverState);
 }
 

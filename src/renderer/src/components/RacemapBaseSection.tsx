@@ -59,7 +59,7 @@ const RacemapBaseSection = (): React.ReactNode => {
 
   return (
     <>
-      <Flex gap={'8px'} justify="space-between" align="baseline">
+      <Flex gap={'8px'} justify="start" align="baseline">
         <h1>2 Racemap Forwarder</h1>
         <span>{appState.version?.gitTag.split('_')[0]}</span>
       </Flex>
