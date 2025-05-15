@@ -1,7 +1,7 @@
 {
   "name": "mylaps-to-racemap-forwarder",
-  "version": "v1.0.3",
-  "main": "out/main/index.js",
+  "version": "v1.0.4",
+  "main": "src/forwarder.ts",
   "author": "jens",
   "license": "MIT",
   "private": true,

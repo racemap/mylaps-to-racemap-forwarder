@@ -78,12 +78,23 @@ export const processStoredData = (aBufferToProcess: BufferObject, messageHandler
   }
 };
 
-export const removeZeroBytesFromBuffer = (buffer: Buffer): Buffer => {
+type RemovableBytes = 0x00 | 0x0a | 0x0d;
+
+export const removeCertainBytesFromBuffer = (bytesToCheckForRemoval: Array<RemovableBytes>, buffer: Buffer): Buffer => {
   const tempBuffer = Buffer.alloc(buffer.length);
   let j = 0;
   for (let i = 0; i < buffer.length; i++) {
-    if (buffer[i] !== 0x00) {
-      tempBuffer[j++] = buffer[i];
+    let skipByte = false;
+    for (let k = 0; k < bytesToCheckForRemoval.length; k++) {
+      if (buffer[i] === bytesToCheckForRemoval[k]) {
+        // skip this byte
+        skipByte = true;
+        continue;
+      }
+    }
+    if (!skipByte) {
+      tempBuffer[j] = buffer[i];
+      j++;
     }
   }
   const resultBuffer = Buffer.alloc(j);

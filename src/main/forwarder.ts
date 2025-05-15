@@ -18,7 +18,7 @@ import {
   storeIncomingRawData,
   myLapsDeviceToObject,
   myLapsLagacyPassingToRead,
-  removeZeroBytesFromBuffer,
+  removeCertainBytesFromBuffer,
 } from './functions';
 import { updateServerState } from './state';
 
@@ -132,7 +132,7 @@ class MyLapsForwarder extends BaseClass {
 
     socket.on('data', (data: Buffer) => {
       try {
-        storeIncomingRawData(removeZeroBytesFromBuffer(data), socket.cache, MAX_MESSAGE_DATA_DELAY_IN_MS);
+        storeIncomingRawData(removeCertainBytesFromBuffer([0x00, 0x0a, 0x0d], data), socket.cache, MAX_MESSAGE_DATA_DELAY_IN_MS);
         processStoredData(socket.cache, (message) => {
           this._handleRawMessage(socket, message);
         });
