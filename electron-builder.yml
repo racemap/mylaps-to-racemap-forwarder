@@ -1,4 +1,4 @@
-appId: com.electron.app
+appId: com.2-racemap-forwarder
 productName: 2-racemap-forwarder
 directories:
   buildResources: build

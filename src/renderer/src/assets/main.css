@@ -7,3 +7,8 @@ body {
   background-repeat: repeat;
   margin: 0;
 }
+
+
+h1 {
+  font-size: 4.0rem;
+}

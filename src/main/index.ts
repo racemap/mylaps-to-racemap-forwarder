@@ -1,4 +1,6 @@
-import icon from '../../resources/icon.png?asset';
+import winIcon from '../../resources/icons/icon.ico?asset';
+import macIcon from '../../resources/icons/icon.icns?asset';
+import linuxIcon from '../../resources/icons/128x128.png?asset';
 import MyLapsForwarder from './mylaps/forwarder';
 import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'node:path';
@@ -30,6 +32,12 @@ async function bootup() {
   new MyLapsForwarder(RACEMAP_API_TOKEN, LISTEN_PORT, LISTEN_MODE === 'private');
 }
 
+const appIcon = {
+  win32: winIcon,
+  darwin: macIcon,
+  linux: linuxIcon,
+}[process.platform];
+
 function createWindow(): BrowserWindow {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -37,7 +45,7 @@ function createWindow(): BrowserWindow {
     height: 770,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    icon: appIcon,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -68,8 +76,10 @@ function createWindow(): BrowserWindow {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
+  app.setName('2 Racemap Forwarder');
+
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron');
+  electronApp.setAppUserModelId('com.2-racemap-forwarder');
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
