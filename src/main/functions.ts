@@ -8,7 +8,7 @@
 import net from 'node:net';
 import moment from 'moment';
 import { Buffer } from 'node:buffer';
-import { CRLF, MyLapsPrefix } from './consts';
+import { CRLF, MyLapsPrefix } from './mylaps/consts';
 import type {
   TimingRead,
   MyLapsDevice,

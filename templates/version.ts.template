@@ -11,7 +11,7 @@ export type ServiceVersion = {
 	gitTag: string;
 };
 
-export const MyLapsToRacemapForwarderVersion: ServiceVersion = {
+export const ToRacemapForwarderVersion: ServiceVersion = {
   gitProjectName: 'GIT_PROJECT_NAME',
   gitBuildDate: 'GIT_BUILD_DATE',
   gitHeadHash: 'GIT_HEAD_HASH',

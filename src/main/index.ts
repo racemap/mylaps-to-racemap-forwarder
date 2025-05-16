@@ -1,9 +1,9 @@
 import icon from '../../resources/icon.png?asset';
-import MyLapsForwarder from './forwarder';
+import MyLapsForwarder from './mylaps/forwarder';
 import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'node:path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import { MyLapsToRacemapForwarderVersion } from './version';
+import { ToRacemapForwarderVersion } from '../version';
 import { info, log, prepareLogger, printEnvVar } from './functions';
 import { getServerState, prepareServerState, saveServerState, upgradeAPIToken, serverState } from './state';
 
@@ -14,7 +14,7 @@ async function bootup() {
   const RACEMAP_API_TOKEN = serverState.apiToken ?? '';
   const LISTEN_MODE = process.env.LISTEN_MODE?.toLocaleLowerCase() ?? 'private';
   const LISTEN_PORT = Number.parseInt(process.env.LISTEN_PORT ?? '3097');
-  const VERSION = MyLapsToRacemapForwarderVersion.gitTag.split('_')[0];
+  const VERSION = ToRacemapForwarderVersion.gitTag.split('_')[0];
 
   printEnvVar({ RACEMAP_API_HOST });
   printEnvVar({ RACEMAP_API_TOKEN });

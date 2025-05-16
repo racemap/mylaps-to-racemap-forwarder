@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import net from 'node:net';
 import shortId from 'shortid';
-import APIClient from './api-client';
-import { BaseClass } from './base-class';
-import { updateServerState } from './state';
-import type { TimingRead, MessageParts, MyLapsDevice, ExtendedSocket, ForwarderState, LocationUpdate, MyLapsLocation } from '../types';
+import APIClient from '../api-client';
+import { BaseClass } from '../base-class';
+import { updateServerState } from '../state';
+import type { TimingRead, MessageParts, MyLapsDevice, ExtendedSocket, ForwarderState, LocationUpdate, MyLapsLocation } from '../../types';
 import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, RacemapMyLapsServerName } from './consts';
 import {
   log,
@@ -19,7 +19,7 @@ import {
   myLapsDeviceToObject,
   myLapsLagacyPassingToRead,
   removeCertainBytesFromBuffer,
-} from './functions';
+} from '../functions';
 
 const MAX_MESSAGE_DATA_DELAY_IN_MS = 500;
 
