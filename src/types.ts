@@ -1,6 +1,6 @@
 import type net from 'node:net';
 import type MyLapsForwarder from './main/mylaps/forwarder';
-import type { ServiceVersion } from './main/version';
+import type { ServiceVersion } from './version';
 
 export type RacemapEvent = {
   id: string;
