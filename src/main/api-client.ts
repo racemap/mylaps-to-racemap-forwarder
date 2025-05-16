@@ -53,10 +53,8 @@ class APIClient {
     }
   }
 
-  async getMyEvents(): Promise<Array<RacemapEvent>> {
-    const res = await this._getJSON('/api/events');
-    console.log('getMyEvents', res);
-    return res;
+  async getMyPredictionEvents(timeFilter: 'future' | 'today'): Promise<Array<RacemapEvent>> {
+    return await this._getJSON(`/api/events?show=atomiceventsonly,hidden,predictiveonly,trackpingeventsonly&filter=${timeFilter}`);
   }
 
   async checkAvailibility(): Promise<boolean> {

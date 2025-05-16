@@ -51,7 +51,7 @@ class MyLapsForwarder extends BaseClass {
     this._apiClient = new APIClient({ authorization: `Bearer ${this._apiToken}` });
     this._server = this._configureReceiverSocket(this._listenPort, this._listenHost);
 
-    info('Try to read/find your Racemap API token');
+    info('Try to read/find your RACEMAP API token');
     if (this._apiToken === '') {
       error(`No API token found. 
       - Please add your API token in the main form.

@@ -6,6 +6,7 @@ import { log } from './functions';
 import type { ServerState } from '../types';
 import pick from 'lodash/pick';
 import { EmptyServerState } from '../consts';
+import { identity } from 'lodash';
 
 const isElectron = !!process.versions?.electron;
 
@@ -38,13 +39,19 @@ export async function upgradeAPIToken(apiToken: string): Promise<boolean> {
   });
   serverState.apiTokenIsValid = (await apiClient.checkToken()) ?? false;
   if (serverState.apiTokenIsValid) {
-    serverState.events = []; // await apiClient.getMyEvents();
+    serverState.events = [...(await apiClient.getMyPredictionEvents('today')), ...(await apiClient.getMyPredictionEvents('future'))].map((e) => ({
+      name: e.name,
+      id: e.id,
+      startTime: e.startTime,
+      endTime: e.endTime,
+      modules: e.modules,
+    }));
   } else {
     serverState.events = [];
     serverState.user = null;
   }
+  log(serverState.events.map((e) => `${e.name} ${e.modules?.predictive?.enabled === true ? '(predictive)' : '(non-predictive)'}`));
 
-  log('events', serverState.events);
   triggerStateChange();
 
   return serverState.apiTokenIsValid;

@@ -7,6 +7,11 @@ export type RacemapEvent = {
   name: string;
   startTime: string;
   endTime: string;
+  modules: {
+    predictive: {
+      enabled: boolean;
+    };
+  };
 };
 
 export type RacemapUser = {
@@ -35,6 +40,7 @@ export type ServerState = {
   apiToken: string | null;
   apiTokenIsValid: boolean;
   events: Array<RacemapEvent>;
+  selectedEvent: RacemapEvent | null;
   user: RacemapUser | null;
   version: ServiceVersion | null;
   myLapsForwarder: ForwarderState;

@@ -76,7 +76,7 @@ function createWindow(): BrowserWindow {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
-  app.setName('2 Racemap Forwarder');
+  app.setName('2 RACEMAP Forwarder');
 
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.2-racemap-forwarder');

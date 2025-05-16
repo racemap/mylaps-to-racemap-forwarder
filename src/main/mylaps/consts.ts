@@ -81,7 +81,7 @@ export const MyLapsIdentifiers = {
   },
 };
 
-export const RacemapMyLapsServerName = `MyLaps2RMServer_${ToRacemapForwarderVersion.gitTag.split('_')[0]}`; // Racemap MyLaps server name
+export const RacemapMyLapsServerName = `MyLaps2RMServer_${ToRacemapForwarderVersion.gitTag.split('_')[0]}`; // RACEMAP MyLaps server name
 
 export const CRLF = '$'; // special character to separate messages in MyLaps TCP IP protocol
 export const MyLapsDataSeparator = '@'; // special character to separate data in MyLaps TCP IP protocol
