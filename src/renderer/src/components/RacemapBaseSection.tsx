@@ -1,16 +1,16 @@
 import React from 'react';
 import styled from 'styled-components';
 import RacemapIcon from './RacemapIcon';
-// import ExternalLink from './ExternalLink';
+import ExternalLink from './ExternalLink';
 import { api } from '@renderer/api';
 import { JsonView } from 'react-json-view-lite';
 import type { ServerState } from '../../../types';
 import { EmptyServerState } from '../../../consts';
 import { TimingSystemTabs } from './TimingSystemsTabs';
-import { Col, Flex, Input, Row, Select } from 'antd';
+import { Col, Flex, Input, Row, Select, Switch } from 'antd';
 import { EyeTwoTone, InfoCircleTwoTone, CheckCircleTwoTone, DoubleRightOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+
 import 'react-json-view-lite/dist/index.css';
-import ExternalLink from './ExternalLink';
 
 const RacemapBaseSection = (): React.ReactNode => {
   const [appState, setAppState] = React.useState<ServerState>(EmptyServerState);
@@ -25,8 +25,11 @@ const RacemapBaseSection = (): React.ReactNode => {
     setAppState(newAppState);
   };
 
+  const onExpertChange = async () => {
+    api.setExpertMode(!appState.expertMode);
+  };
+
   const onChange = (eventId: string) => {
-    console.log(`Try to select event with id: ${eventId}`);
     api.selectRacemapEvent(eventId);
   };
 
@@ -69,10 +72,11 @@ const RacemapBaseSection = (): React.ReactNode => {
 
         <h1>2 RACEMAP Forwarder</h1>
         <span>{appState.version?.gitTag.split('_')[0]}</span>
+        <Switch size="small" title="Toggle expert mode" checked={appState.expertMode} onChange={onExpertChange} />
       </Flex>
       <HorizontalLine />
       <Row>
-        <Col span={13}>
+        <Col span={appState.expertMode ? 13 : 24}>
           <h2>
             RACEMAP API Token{' '}
             <Tiny>
@@ -140,12 +144,23 @@ const RacemapBaseSection = (): React.ReactNode => {
             Otherwise the gun-times will be dropped.
           </TinyExplaination>
         </Col>
-        <Col span={10} offset={1}>
-          <h2>State</h2>
-          <StateDetailsContainer>
-            <JsonView data={appState} />
-          </StateDetailsContainer>
-        </Col>
+        {appState.expertMode && (
+          <Col span={10} offset={1}>
+            <h2>State</h2>
+            <StateDetailsContainer>
+              <JsonView
+                shouldExpandNode={(level, _value) => {
+                  if (level === 0) {
+                    return true;
+                  }
+                  return false;
+                }}
+                style={{ backgroundColor: 'transparent' }}
+                data={appState}
+              />
+            </StateDetailsContainer>
+          </Col>
+        )}
       </Row>
       <TimingSystemTabs appState={appState} logLines={stdout} />
     </>

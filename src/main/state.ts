@@ -86,7 +86,7 @@ export function getServerState(): Promise<ServerState> {
 }
 
 export function saveServerState(): void {
-  fs.writeFileSync(storagePath, JSON.stringify(pick(serverState, ['apiToken']), null, 2));
+  fs.writeFileSync(storagePath, JSON.stringify(pick(serverState, ['apiToken', 'expertMode']), null, 2));
 }
 
 export async function loadServerState(): Promise<void> {
@@ -140,6 +140,13 @@ export async function selectRacemapEvent(eventId: string): Promise<void> {
   } else {
     error('No event found with id', eventId);
   }
+}
+
+export function setExpertMode(expertMode: boolean): void {
+  updateServerState({
+    expertMode,
+  });
+  triggerStateChange();
 }
 
 export function callExternalLink(url: string): void {

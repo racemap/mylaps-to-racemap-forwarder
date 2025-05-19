@@ -6,6 +6,7 @@ export const OneMinuteInMillis = 60000; // 1 minute in milliseconds
 export const OneSecondInMillis = 1000; // 1 second in milliseconds
 
 export const EmptyServerState: ServerState = {
+  expertMode: false,
   apiToken: '',
   apiTokenIsValid: false,
   events: [],

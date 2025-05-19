@@ -56,6 +56,7 @@ export type ForwarderState = {
 };
 
 export type ServerState = {
+  expertMode: boolean;
   apiToken: string | null;
   apiTokenIsValid: boolean;
   events: Array<RacemapEvent>;

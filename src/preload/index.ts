@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
 import type { ServerState } from '../types';
-import type { getServerState, selectRacemapEvent } from '../main/state';
+import type { getServerState, selectRacemapEvent, setExpertMode } from '../main/state';
 import type { callExternalLink, upgradeAPIToken } from '../main/state';
 
 // Custom APIs for renderer
@@ -18,8 +18,12 @@ const api = {
     return ipcRenderer.invoke('getServerState');
   },
 
+  setExpertMode(...params: Parameters<typeof setExpertMode>): ReturnType<typeof setExpertMode> {
+    ipcRenderer.invoke('setExpertMode', ...params);
+  },
+
   selectRacemapEvent(...params: Parameters<typeof selectRacemapEvent>): ReturnType<typeof selectRacemapEvent> {
-    ipcRenderer.invoke('selectRacemapEvent', ...params);
+    return ipcRenderer.invoke('selectRacemapEvent', ...params);
   },
 
   onServerStateChange: (callback: (serverState: ServerState) => void) => {
