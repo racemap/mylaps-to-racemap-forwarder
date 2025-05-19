@@ -63,7 +63,10 @@ const RacemapBaseSection = (): React.ReactNode => {
   return (
     <>
       <Flex gap={'8px'} justify="start" align="baseline">
-        <RacemapIcon style={{ marginRight: '20px' }} />
+        <ExternalLink href="https://docs.racemap.com/predictive-tracking-with-data-from-timekeeping">
+          <RacemapIcon title="docs.racemap.com/predictive-tracking-with-data-from-timekeeping" style={{ marginRight: '20px' }} />
+        </ExternalLink>
+
         <h1>2 RACEMAP Forwarder</h1>
         <span>{appState.version?.gitTag.split('_')[0]}</span>
       </Flex>

@@ -1,9 +1,10 @@
 type Props = {
   scale?: number;
+  title?: string;
   style?: React.CSSProperties;
 };
 
-const RacemapIcon = ({ scale = 1.0, style }: Props) => (
+const RacemapIcon = ({ scale = 1.0, title = 'RACEMAP Icon', style }: Props) => (
   <div style={{ ...style }}>
     <svg
       width={`${scale * 108.89805}px`}
@@ -14,7 +15,7 @@ const RacemapIcon = ({ scale = 1.0, style }: Props) => (
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs id="defs2" />
-      <title id="title2">RACEMAP Icon</title>
+      <title id="title2">{title}</title>
       <g id="layer1" transform="translate(-26.778503,-39.808555) ">
         <path
           style={{
