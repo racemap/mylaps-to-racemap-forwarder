@@ -7,9 +7,9 @@ import { ToRacemapForwarderVersion } from '../version';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { info, log, prepareLogger, printEnvVar } from './functions';
-import { getServerState, prepareServerState, saveServerState, upgradeAPIToken, serverState } from './state';
+import { getServerState, prepareServerState, saveServerState, upgradeAPIToken, serverState, apiClient } from './state';
 
-async function bootup() {
+async function bootup(mainWindow: BrowserWindow) {
   log('Hello from 2-racemap-forwarder');
 
   const RACEMAP_API_HOST = process.env.RCEMAP_API_HOST ?? 'https://racemap.com';
@@ -29,7 +29,10 @@ async function bootup() {
     throw new Error(`Invalid listen mode. Please use either 'private' or 'public'`);
   }
 
-  new MyLapsForwarder(RACEMAP_API_TOKEN, LISTEN_PORT, LISTEN_MODE === 'private');
+  prepareLogger(mainWindow.webContents);
+  prepareServerState(mainWindow.webContents);
+
+  new MyLapsForwarder(apiClient, LISTEN_PORT, LISTEN_MODE === 'private');
 }
 
 const appIcon = {
@@ -110,10 +113,7 @@ app.whenReady().then(async () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 
-  prepareLogger(mainWindow.webContents);
-  prepareServerState(mainWindow.webContents);
-
-  await bootup();
+  await bootup(mainWindow);
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common

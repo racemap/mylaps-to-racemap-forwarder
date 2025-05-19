@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import net from 'node:net';
 import shortId from 'shortid';
-import APIClient from '../api-client';
+import type APIClient from '../api-client';
 import { BaseClass } from '../base-class';
 import { updateServerState } from '../state';
 import type { TimingRead, MessageParts, MyLapsDevice, ExtendedSocket, ForwarderState, LocationUpdate, MyLapsLocation } from '../../types';
@@ -36,45 +36,18 @@ const clearIntervalTimer = (timerHandle: NodeJS.Timeout | null) => {
 class MyLapsForwarder extends BaseClass {
   _connections: Map<string, ExtendedSocket> = new Map();
   _server: net.Server;
-  _apiToken: string;
   _listenHost: string;
   _listenPort: number;
   _forwardedReads = 0;
   _apiClient: APIClient;
 
-  constructor(apiToken: string, listenPort: number, justLocalHost = true) {
+  constructor(apiClient: APIClient, listenPort: number, justLocalHost = true) {
     super();
 
-    this._apiToken = apiToken;
+    this._apiClient = apiClient;
     this._listenPort = listenPort;
     this._listenHost = justLocalHost ? '127.0.0.1' : '0.0.0.0';
-    this._apiClient = new APIClient({ authorization: `Bearer ${this._apiToken}` });
     this._server = this._configureReceiverSocket(this._listenPort, this._listenHost);
-
-    info('Try to read/find your RACEMAP API token');
-    if (this._apiToken === '') {
-      error(`No API token found. 
-      - Please add your API token in the main form.
-      - Or create an .env file and store your token there. 
-      - The token should look like this: RACEMAP_API_TOKEN=your-api-token
-      - You can get your api token from your racemap account profile section.`);
-    } else {
-      success('|-> Users api token is availible');
-    }
-
-    info('Check if your token is valid');
-    this._apiClient.checkToken().then((isValid) => {
-      updateServerState({
-        apiToken,
-        apiTokenIsValid: isValid,
-      });
-
-      if (isValid) {
-        success('|-> API Token is valid');
-      } else {
-        error('|-> API Token is invalid. Please check/update your token and try again.');
-      }
-    });
 
     this.updateElectronState();
   }

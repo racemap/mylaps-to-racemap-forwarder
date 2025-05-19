@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import pick from 'lodash/pick';
 import path from 'node:path';
 import APIClient from './api-client';
-import { log } from './functions';
+import { error, info, log, success } from './functions';
 import { app, shell } from 'electron';
 import { EmptyServerState } from '../consts';
 import type { ServerState } from '../types';
@@ -18,6 +18,7 @@ export let serverState: ServerState = {
   ...EmptyServerState,
   apiToken: process.env.RACEMAP_API_TOKEN ?? null,
 };
+export const apiClient = new APIClient({ authorization: `Bearer ${serverState.apiToken}` });
 
 function triggerStateChange(): void {
   refToElectronWebContents?.send('onServerStateChange', serverState);
@@ -32,11 +33,18 @@ export function updateServerState(newState: Partial<ServerState>): void {
 }
 
 export async function upgradeAPIToken(apiToken: string): Promise<boolean> {
-  serverState.apiToken = apiToken;
-  const apiClient = new APIClient({
-    authorization: `Bearer ${serverState.apiToken}`,
+  apiClient.setApiToken(apiToken);
+
+  updateServerState({
+    apiToken,
+    apiTokenIsValid: (await apiClient.checkToken()) ?? false,
   });
-  serverState.apiTokenIsValid = (await apiClient.checkToken()) ?? false;
+  await fetchEvents();
+
+  return serverState.apiTokenIsValid;
+}
+
+async function fetchEvents(): Promise<void> {
   if (serverState.apiTokenIsValid) {
     serverState.events = [...(await apiClient.getMyPredictionEvents('today')), ...(await apiClient.getMyPredictionEvents('future'))].map((e) => ({
       name: e.name,
@@ -49,12 +57,7 @@ export async function upgradeAPIToken(apiToken: string): Promise<boolean> {
     serverState.events = [];
     serverState.user = null;
   }
-
-  log(serverState.events.map((e) => `${e.name} ${e.modules?.predictive?.enabled === true ? '(predictive)' : '(non-predictive)'}`));
-
   triggerStateChange();
-
-  return serverState.apiTokenIsValid;
 }
 
 export function getServerState(): Promise<ServerState> {
@@ -65,21 +68,43 @@ export function saveServerState(): void {
   fs.writeFileSync(storagePath, JSON.stringify(pick(serverState, ['apiToken']), null, 2));
 }
 
-export function loadServerState(): void {
+export async function loadServerState(): Promise<void> {
   if (fs.existsSync(storagePath)) {
     const parsedState = JSON.parse(fs.readFileSync(storagePath, 'utf-8'));
-    console.log('parsedState', parsedState);
     serverState = {
       ...serverState,
       ...parsedState,
     };
-    console.log('serverState', serverState);
+
+    info('Try to read/find your RACEMAP API token');
+    if (serverState.apiToken === '') {
+      error(`No API token found. 
+      - Please add your API token in the main form.
+      - Or create an .env file and store your token there. 
+      - The token should look like this: RACEMAP_API_TOKEN=your-api-token
+      - You can get your api token from your racemap account profile section.`);
+    } else {
+      success('|-> Users api token is availible');
+    }
+
+    info('Check if your token is valid');
+    apiClient.setApiToken(serverState.apiToken);
+    updateServerState({
+      apiTokenIsValid: (await apiClient.checkToken()) ?? false,
+    });
   }
 }
 
-export function prepareServerState(webContents: Electron.WebContents): void {
+export async function prepareServerState(webContents: Electron.WebContents): Promise<void> {
   refToElectronWebContents = webContents;
-  loadServerState();
+  await loadServerState();
+  await fetchEvents();
+
+  if (serverState.apiTokenIsValid) {
+    success('|-> API Token is valid');
+  } else {
+    error('|-> API Token is invalid. Please check/update your token and try again.');
+  }
 }
 
 export function callExternalLink(url: string): void {

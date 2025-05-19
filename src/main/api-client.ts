@@ -13,6 +13,13 @@ class APIClient {
     this._headers = headers;
   }
 
+  setApiToken(token: string | null): void {
+    this._headers = {
+      ...this._headers,
+      authorization: `Bearer ${token}`,
+    };
+  }
+
   async _fetch(path: string, options: RequestInit = {}): Promise<Response> {
     const res = await fetch(`${this._host}${path}`, {
       ...options,
