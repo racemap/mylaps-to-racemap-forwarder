@@ -1,8 +1,8 @@
 import moment from 'moment';
-import MyLapsForwarder from '../src/main/forwarder';
+import MyLapsForwarder from '../src/main/mylaps/forwarder';
 import { serial as test } from 'ava';
 import type { TTestState, TTestFixtures, TPredictionTestTimes } from '../src/types';
-import { CRLF, MyLapsPrefix, MyLapsFunctions, OneHourInMillis, MyLapsIdentifiers, OneSecondInMillis, MyLapsDataSeparator } from '../src/main/consts';
+import { OneHourInMillis, OneSecondInMillis } from '../src/consts';
 import {
   sleep,
   isPortInUse,
@@ -14,12 +14,15 @@ import {
   myLapsLagacyPassingToRead,
   removeCertainBytesFromBuffer,
 } from '../src/main/functions';
+import { CRLF, MyLapsDataSeparator, MyLapsFunctions, MyLapsIdentifiers, MyLapsPrefix } from '../src/main/mylaps/consts';
+import APIClient from '../src/main/api-client';
 
 const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST ?? 'https://racemap.com';
 const RACEMAP_API_TOKEN = process.env.RACEMAP_API_TOKEN ?? '';
 const LISTEN_MODE = process.env.LISTEN_MODE?.toLocaleLowerCase() ?? 'private';
 const LISTEN_PORT = Number.parseInt(process.env.LISTEN_PORT || '3097');
 
+const apiClient = new APIClient({ authorization: `Bearer ${RACEMAP_API_TOKEN}` });
 const forwarderIPAddress = LISTEN_MODE === 'private' ? '127.0.0.1' : '0.0.0.0';
 
 const shortId001 = shortIdBuilder();
@@ -167,7 +170,7 @@ test('Try to spin up an instance of the mylaps forwarder', async (t) => {
     t.log(`Port ${LISTEN_PORT} is already in use. We do not have to spin a server.`);
     t.pass();
   } else {
-    state.forwarder = new MyLapsForwarder(RACEMAP_API_TOKEN, LISTEN_PORT);
+    state.forwarder = new MyLapsForwarder(apiClient, LISTEN_PORT);
     t.not(state.forwarder, null, 'instance of MyLapsForwarder is not null');
   }
 });
