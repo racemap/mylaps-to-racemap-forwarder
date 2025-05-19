@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import RacemapIcon from './RacemapIcon';
+// import ExternalLink from './ExternalLink';
 import { api } from '@renderer/api';
 import { JsonView } from 'react-json-view-lite';
 import type { ServerState } from '../../../types';
@@ -9,6 +10,7 @@ import { TimingSystemTabs } from './TimingSystemsTabs';
 import { Col, Flex, Input, Row, Select } from 'antd';
 import { EyeTwoTone, InfoCircleTwoTone, CheckCircleTwoTone, DoubleRightOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import 'react-json-view-lite/dist/index.css';
+import ExternalLink from './ExternalLink';
 
 const RacemapBaseSection = (): React.ReactNode => {
   const [appState, setAppState] = React.useState<ServerState>(EmptyServerState);
@@ -67,7 +69,12 @@ const RacemapBaseSection = (): React.ReactNode => {
       <HorizontalLine />
       <Row>
         <Col span={13}>
-          <h2>RACEMAP API Token</h2>
+          <h2>
+            RACEMAP API Token{' '}
+            <Tiny>
+              <ExternalLink href="https://racemap.com/admin/account/52127ba88fee178ac550d237#api-tokens">get your token here</ExternalLink>
+            </Tiny>
+          </h2>
           <Flex gap="middle" align="start">
             <Input.Password
               size="large"
@@ -90,13 +97,17 @@ const RacemapBaseSection = (): React.ReactNode => {
           <TinyExplaination>
             The token gives you access to your RACEMAP Account. It's <strong>required</strong>.
           </TinyExplaination>
-          <h2>Select RACEMAP Event</h2>
+          <h2>
+            Select RACEMAP Event <Tiny>optional</Tiny>
+          </h2>
           <Flex gap="middle" align="start">
             <Select
               style={{ width: '100%' }}
               size="large"
               showSearch
-              placeholder="Select one of your prediction events."
+              placeholder={
+                appState?.events?.length > 0 ? `Select one of your ${appState?.events?.length} predictive events.` : 'No predictive events found.'
+              }
               optionFilterProp="label"
               onChange={onChange}
               onSearch={onSearch}
@@ -150,4 +161,9 @@ const HorizontalLine = styled.div`
   width: 100%;
   height: 1px;
   background-color: #ccc;
+`;
+
+const Tiny = styled.span`
+  font-size: 12px;
+  color: #888;
 `;

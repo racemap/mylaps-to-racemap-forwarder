@@ -1,16 +1,15 @@
-import { app } from 'electron';
-import path from 'node:path';
 import fs from 'node:fs';
+import pick from 'lodash/pick';
+import path from 'node:path';
 import APIClient from './api-client';
 import { log } from './functions';
-import type { ServerState } from '../types';
-import pick from 'lodash/pick';
+import { app, shell } from 'electron';
 import { EmptyServerState } from '../consts';
-import { identity } from 'lodash';
+import type { ServerState } from '../types';
 
 const isElectron = !!process.versions?.electron;
 
-const userDataPath = isElectron ? app.getPath('userData') : __dirname;
+const userDataPath = isElectron ? app.getPath('userData') : './';
 const storagePath = path.join(userDataPath, 'config.json');
 
 let refToElectronWebContents: Electron.WebContents | null = null;
@@ -50,6 +49,7 @@ export async function upgradeAPIToken(apiToken: string): Promise<boolean> {
     serverState.events = [];
     serverState.user = null;
   }
+
   log(serverState.events.map((e) => `${e.name} ${e.modules?.predictive?.enabled === true ? '(predictive)' : '(non-predictive)'}`));
 
   triggerStateChange();
@@ -80,4 +80,11 @@ export function loadServerState(): void {
 export function prepareServerState(webContents: Electron.WebContents): void {
   refToElectronWebContents = webContents;
   loadServerState();
+}
+
+export function callExternalLink(url: string): void {
+  log('callExternalLink', url);
+  if (isElectron) {
+    shell.openExternal(url);
+  }
 }

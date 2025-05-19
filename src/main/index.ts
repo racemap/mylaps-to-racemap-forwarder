@@ -2,10 +2,10 @@ import winIcon from '../../resources/icons/icon.ico?asset';
 import macIcon from '../../resources/icons/icon.icns?asset';
 import linuxIcon from '../../resources/icons/128x128.png?asset';
 import MyLapsForwarder from './mylaps/forwarder';
-import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'node:path';
-import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { ToRacemapForwarderVersion } from '../version';
+import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { info, log, prepareLogger, printEnvVar } from './functions';
 import { getServerState, prepareServerState, saveServerState, upgradeAPIToken, serverState } from './state';
 
@@ -89,6 +89,10 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.on('ping', () => console.log('pong'));
+
+  ipcMain.handle('callExternalLink', async (_invokeEvent, url) => {
+    await shell.openExternal(url);
+  });
 
   ipcMain.handle('upgradeAPIToken', async (_invokeEvent, apiToken) => {
     return await upgradeAPIToken(apiToken);

@@ -1,13 +1,17 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
-import type { upgradeAPIToken } from '../main/state';
-import type { getServerState } from '../main/state';
 import type { ServerState } from '../types';
+import type { getServerState } from '../main/state';
+import type { callExternalLink, upgradeAPIToken } from '../main/state';
 
 // Custom APIs for renderer
 const api = {
   upgradeAPIToken(...params: Parameters<typeof upgradeAPIToken>): ReturnType<typeof upgradeAPIToken> {
     return ipcRenderer.invoke('upgradeAPIToken', ...params);
+  },
+
+  callExternalLink(...params: Parameters<typeof callExternalLink>): ReturnType<typeof callExternalLink> {
+    ipcRenderer.invoke('callExternalLink', ...params);
   },
 
   getServerState(): ReturnType<typeof getServerState> {
