@@ -25,8 +25,9 @@ const RacemapBaseSection = (): React.ReactNode => {
     setAppState(newAppState);
   };
 
-  const onChange = (value: string) => {
-    console.log(`selected ${value}`);
+  const onChange = (eventId: string) => {
+    console.log(`Try to select event with id: ${eventId}`);
+    api.selectRacemapEvent(eventId);
   };
 
   const onSearch = (value: string) => {
@@ -72,7 +73,11 @@ const RacemapBaseSection = (): React.ReactNode => {
           <h2>
             RACEMAP API Token{' '}
             <Tiny>
-              <ExternalLink href="https://racemap.com/admin/account/52127ba88fee178ac550d237#api-tokens">get your token here</ExternalLink>
+              <ExternalLink
+                href={appState?.user ? `https://racemap.com/admin/account/${appState?.user.id}#api-tokens` : 'https://racemap.com/admin/account'}
+              >
+                get your token here
+              </ExternalLink>
             </Tiny>
           </h2>
           <Flex gap="middle" align="start">

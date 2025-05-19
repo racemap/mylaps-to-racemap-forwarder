@@ -1,6 +1,6 @@
 import withQuery from 'with-query';
-import type { StoredTimingRead, TimingRead, RacemapEvent } from '../types';
 import { error } from './functions';
+import type { StoredTimingRead, TimingRead, RacemapEvent, RacemapUser, RacemapStarter } from '../types';
 
 const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST || 'https://racemap.com';
 
@@ -60,8 +60,21 @@ class APIClient {
     }
   }
 
+  async getDetailsAboutMe(): Promise<RacemapUser> {
+    const miniUser = await this._getJSON('/api/inspect');
+    return await this._getJSON(`/api/users/${miniUser.userId}`);
+  }
+
   async getMyPredictionEvents(timeFilter: 'future' | 'today'): Promise<Array<RacemapEvent>> {
     return await this._getJSON(`/api/events?show=atomiceventsonly,hidden,predictiveonly,trackpingeventsonly&filter=${timeFilter}`);
+  }
+
+  async getEventById(eventId: string): Promise<RacemapEvent> {
+    return await this._getJSON(`/api/events/${eventId}`);
+  }
+
+  async getEventStarters(eventId: string): Promise<Array<RacemapStarter>> {
+    return await this._getJSON(`/api/events/${eventId}/starters`);
   }
 
   async checkAvailibility(): Promise<boolean> {

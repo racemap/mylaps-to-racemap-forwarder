@@ -2,6 +2,25 @@ import type net from 'node:net';
 import type MyLapsForwarder from './main/mylaps/forwarder';
 import type { ServiceVersion } from './version';
 
+export type RacemapStarter = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  startNumber: string;
+  deviceClass?: string;
+  deviceType?: string;
+  trackId?: string;
+  appId: string | null;
+  startTime?: string;
+  endTime?: string;
+  startTimeStamp?: number;
+  endTimeStamp?: number;
+  times: { start?: string; end?: string } & Record<string, string | undefined>;
+  manualFinishDuration?: number;
+  deviceId: string | null;
+};
+
 export type RacemapEvent = {
   id: string;
   name: string;
@@ -40,6 +59,7 @@ export type ServerState = {
   apiToken: string | null;
   apiTokenIsValid: boolean;
   events: Array<RacemapEvent>;
+  starters: Array<RacemapStarter>;
   selectedEvent: RacemapEvent | null;
   user: RacemapUser | null;
   version: ServiceVersion | null;

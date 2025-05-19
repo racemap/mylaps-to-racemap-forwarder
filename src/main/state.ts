@@ -39,7 +39,14 @@ export async function upgradeAPIToken(apiToken: string): Promise<boolean> {
     apiToken,
     apiTokenIsValid: (await apiClient.checkToken()) ?? false,
   });
-  await fetchEvents();
+
+  if (serverState.apiTokenIsValid) {
+    success('API token is valid');
+    await fetchEvents();
+    await fetchUser();
+  } else {
+    error('API token is invalid');
+  }
 
   return serverState.apiTokenIsValid;
 }
@@ -55,6 +62,20 @@ async function fetchEvents(): Promise<void> {
     }));
   } else {
     serverState.events = [];
+    serverState.user = null;
+  }
+  triggerStateChange();
+}
+
+async function fetchUser(): Promise<void> {
+  if (serverState.apiTokenIsValid) {
+    const user = await apiClient.getDetailsAboutMe();
+    serverState.user = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    };
+  } else {
     serverState.user = null;
   }
   triggerStateChange();
@@ -98,12 +119,26 @@ export async function loadServerState(): Promise<void> {
 export async function prepareServerState(webContents: Electron.WebContents): Promise<void> {
   refToElectronWebContents = webContents;
   await loadServerState();
-  await fetchEvents();
 
   if (serverState.apiTokenIsValid) {
     success('|-> API Token is valid');
+    await fetchEvents();
+    await fetchUser();
   } else {
     error('|-> API Token is invalid. Please check/update your token and try again.');
+  }
+}
+
+export async function selectRacemapEvent(eventId: string): Promise<void> {
+  const event = await apiClient.getEventById(eventId);
+  const starters = await apiClient.getEventStarters(eventId);
+  if (event) {
+    updateServerState({
+      starters,
+      selectedEvent: event,
+    });
+  } else {
+    error('No event found with id', eventId);
   }
 }
 

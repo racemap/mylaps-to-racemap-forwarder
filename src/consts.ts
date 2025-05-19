@@ -9,6 +9,7 @@ export const EmptyServerState: ServerState = {
   apiToken: '',
   apiTokenIsValid: false,
   events: [],
+  starters: [],
   selectedEvent: null,
   user: null,
   version: ToRacemapForwarderVersion,

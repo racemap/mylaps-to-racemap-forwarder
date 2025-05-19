@@ -7,7 +7,7 @@ import { ToRacemapForwarderVersion } from '../version';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { info, log, prepareLogger, printEnvVar } from './functions';
-import { getServerState, prepareServerState, saveServerState, upgradeAPIToken, serverState, apiClient } from './state';
+import { getServerState, prepareServerState, saveServerState, upgradeAPIToken, serverState, apiClient, selectRacemapEvent } from './state';
 
 async function bootup(mainWindow: BrowserWindow) {
   log('Hello from 2-racemap-forwarder');
@@ -99,6 +99,10 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('upgradeAPIToken', async (_invokeEvent, apiToken) => {
     return await upgradeAPIToken(apiToken);
+  });
+
+  ipcMain.handle('selectRacemapEvent', async (_invokeEvent, eventId) => {
+    await selectRacemapEvent(eventId);
   });
 
   ipcMain.handle('getServerState', async (_invokeEvent) => {
