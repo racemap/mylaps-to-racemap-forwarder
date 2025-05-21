@@ -1,10 +1,12 @@
 import moment from 'moment';
 import APIClient from '../src/main/api-client';
 import MyLapsForwarder from '../src/main/mylaps/forwarder';
+import ChronoTrackForwarder from '../src/main/chronoTrack/forwarder';
 import { serial as test } from 'ava';
-import type { TTestState, TTestFixtures, TPredictionTestTimes } from '../src/types';
 import { OneHourInMillis, OneSecondInMillis } from '../src/consts';
 import { myLapsLagacyPassingToRead, myLapsPassingToRead } from '../src/main/mylaps/functions';
+import { ChronoTrackCommands, ChronoTrackFrameTerminator } from '../src/main/chronoTrack/consts';
+import type { TTestState, TTestFixtures, TPredictionTestTimes } from '../src/types';
 import { MyLapsFrameTerminator, MyLapsDataSeparator, MyLapsFunctions, MyLapsIdentifiers, MyLapsPrefix } from '../src/main/mylaps/consts';
 import {
   sleep,
@@ -19,10 +21,14 @@ import {
 const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST ?? 'https://racemap.com';
 const RACEMAP_API_TOKEN = process.env.RACEMAP_API_TOKEN ?? '';
 const LISTEN_MODE = process.env.LISTEN_MODE?.toLocaleLowerCase() ?? 'private';
-const LISTEN_PORT = Number.parseInt(process.env.LISTEN_PORT || '3097');
+const MYLAPS_LISTEN_PORT = Number.parseInt(process.env.MYLAPS_LISTEN_PORT || '3097');
+const CHRONO_LISTEN_PORT = Number.parseInt(process.env.CHRONO_LISTEN_PORT || '3000');
 
 const apiClient = new APIClient({ authorization: `Bearer ${RACEMAP_API_TOKEN}` });
 const forwarderIPAddress = LISTEN_MODE === 'private' ? '127.0.0.1' : '0.0.0.0';
+
+const hasMyLapsForwarderInstance = !isPortInUse(MYLAPS_LISTEN_PORT);
+const hasChronoTrckForwarderInstance = !isPortInUse(CHRONO_LISTEN_PORT);
 
 const shortId001 = shortIdBuilder();
 const times: TPredictionTestTimes = {
@@ -148,6 +154,7 @@ const state: TTestState = {
       lastTime: 0,
       buffer: Buffer.alloc(0),
     },
+    connectedClients: [],
   },
 };
 
@@ -199,17 +206,17 @@ test('Test function myLapsPassingToRead', (t) => {
 });
 
 test('Try to spin up an instance of the mylaps forwarder', async (t) => {
-  if (await isPortInUse(LISTEN_PORT)) {
-    t.log(`Port ${LISTEN_PORT} is already in use. We do not have to spin a server.`);
+  if (await isPortInUse(MYLAPS_LISTEN_PORT)) {
+    t.log(`Port ${MYLAPS_LISTEN_PORT} is already in use. We do not have to spin a server.`);
     t.pass();
   } else {
-    state.myLaps.forwarder = new MyLapsForwarder(apiClient, LISTEN_PORT);
+    state.myLaps.forwarder = new MyLapsForwarder(apiClient, MYLAPS_LISTEN_PORT);
     t.not(state.myLaps.forwarder, null, 'instance of MyLapsForwarder is not null');
   }
 });
 
-test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) => {
-  state.myLaps.aTCPClient = await connectTcpSocket(forwarderIPAddress, LISTEN_PORT);
+test(`should connect to tcp://${forwarderIPAddress}:${MYLAPS_LISTEN_PORT}`, async (t) => {
+  state.myLaps.aTCPClient = await connectTcpSocket(forwarderIPAddress, MYLAPS_LISTEN_PORT);
   t.not(state.myLaps.aTCPClient, null, 'tcp client should be not null but is');
   if (state.myLaps.aTCPClient != null) {
     state.myLaps.aTCPClient.sendFrame = (text: string) => {
@@ -311,7 +318,7 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
   }
 });
 
-test('should send the welcome message through the socket', async (t) => {
+test('should send the a MyLaps welcome message through the socket', async (t) => {
   t.not(state.myLaps.aTCPClient, null, 'tcp client is not null');
   if (state.myLaps.aTCPClient != null) {
     t.true(
@@ -416,6 +423,258 @@ test('the server should have responded with AckMarker for the last marker telegr
   const ackMarker = state.myLaps.fromServiceMessages.find((message) => message.includes(MyLapsFunctions.AckMarker));
   t.not(ackMarker, undefined, 'server should have responded with AckMarker');
 });
+
+test('Try to spin up an instance of the chronotrack forwarder', async (t) => {
+  if (await isPortInUse(CHRONO_LISTEN_PORT)) {
+    t.log(`Port ${CHRONO_LISTEN_PORT} is already in use. We do not have to spin a server.`);
+    t.pass();
+  } else {
+    state.chronoTrack.forwarder = new ChronoTrackForwarder(apiClient, CHRONO_LISTEN_PORT);
+    t.not(state.chronoTrack.forwarder, null, 'instance of ChronoTrackForwarder is not null');
+  }
+});
+
+test(`should connect to tcp://${forwarderIPAddress}:${CHRONO_LISTEN_PORT}`, async (t) => {
+  state.chronoTrack.aTCPClient = await connectTcpSocket(forwarderIPAddress, CHRONO_LISTEN_PORT);
+  t.not(state.chronoTrack.aTCPClient, null, 'tcp client should be not null but is');
+
+  if (state.chronoTrack.aTCPClient != null) {
+    state.chronoTrack.aTCPClient.on('data', (data: Buffer) => {
+      storeIncomingRawData(data, state.chronoTrack.socketCache);
+      processStoredData(
+        state.chronoTrack.socketCache,
+        (message) => {
+          if (state.chronoTrack.aTCPClient == null) return;
+          const messageStr = message.toString();
+          state.chronoTrack.fromServiceMessages.push(messageStr);
+          const parts = messageStr.split('~');
+          const len = parts.length;
+          if (len >= 1) {
+            if (len > 1 && parts[0] === ChronoTrackCommands.start) {
+              state.chronoTrack.aTCPClient.write(
+                `CT01_13~21~${fixtures.chronoTrack.newLocationName}~${fixtures.chronoTrack.transponderId}~${moment(times.testStartTime)
+                  .utc()
+                  .format('YYYY-MM-DDTHH:mm:ss.SS')}~1~117F37~8${ChronoTrackFrameTerminator}`,
+              );
+            }
+
+            if (len === 1) {
+              switch (parts[0]) {
+                case ChronoTrackCommands.start: {
+                  for (const [i, location] of fixtures.chronoTrack.event.locations.entries()) {
+                    state.chronoTrack.aTCPClient.write(
+                      `${i % 2 === 0 ? 'CT01_13' : 'CT01_33'}~21~${location.name}~${fixtures.chronoTrack.transponderId}~${moment(times.testStartTime)
+                        .utc()
+                        .format('YYYY-MM-DDTHH:mm:ss.SS')}~1~${location.mac}~8${ChronoTrackFrameTerminator}`,
+                    );
+                  }
+                  break;
+                }
+                case ChronoTrackCommands.ping: {
+                  state.chronoTrack.aTCPClient.write(`${ChronoTrackCommands.ack}~${ChronoTrackCommands.ping}${ChronoTrackFrameTerminator}`);
+                  break;
+                }
+                case ChronoTrackCommands.getlocations: {
+                  state.chronoTrack.aTCPClient.write(
+                    `${ChronoTrackCommands.ack}~${ChronoTrackCommands.getlocations}~${fixtures.chronoTrack.event.locations.map((l) => l.name).join('~')}${ChronoTrackFrameTerminator}`,
+                  );
+                  break;
+                }
+                case ChronoTrackCommands.geteventinfo: {
+                  state.chronoTrack.aTCPClient.write(
+                    `${ChronoTrackCommands.ack}~${ChronoTrackCommands.geteventinfo}~${fixtures.chronoTrack.event.name}~${fixtures.chronoTrack.event.id}~${fixtures.chronoTrack.event.description}${ChronoTrackFrameTerminator}`,
+                  );
+                  break;
+                }
+                case ChronoTrackCommands.getconnectionid: {
+                  state.chronoTrack.aTCPClient.write(
+                    `${ChronoTrackCommands.ack}~${ChronoTrackCommands.getconnectionid}~${fixtures.chronoTrack.connectionId}${ChronoTrackFrameTerminator}`,
+                  );
+                  break;
+                }
+                default: {
+                  if (parts[0].includes('guntimes')) break;
+                  if (parts[0].includes('newlocations')) break;
+                  if (parts[0].includes('connection-id')) break;
+                  if (parts[0].includes('stream-mode')) break;
+                  if (parts[0].includes('time-format')) break;
+                  console.warn(`Unknown command from server. ${parts[0]}`);
+                  break;
+                }
+              }
+            }
+          }
+        },
+        ChronoTrackFrameTerminator,
+      );
+    });
+  }
+});
+
+test('should send the ChronoTrack welcome message through the socket', async (t) => {
+  t.not(state.chronoTrack.aTCPClient, null, 'tcp client is not null');
+  if (state.chronoTrack.aTCPClient != null) {
+    t.true(
+      state.chronoTrack.aTCPClient.write(`RacemapTestClient~1.0.0~CTP01${ChronoTrackFrameTerminator}`),
+      'it should be possible to write a welcome message to the socket',
+    );
+    // give the server some time to answer!
+    await sleep(500);
+  }
+});
+
+test('should send a TimingRead through the socket', async (t) => {
+  t.not(state.chronoTrack.aTCPClient, null, 'tcp client should be initialized but is not');
+
+  if (state.chronoTrack.aTCPClient != null) {
+    t.true(
+      state.chronoTrack.aTCPClient.write(
+        `CT01_13~21~START~${fixtures.chronoTrack.transponderId}~${moment(times.testStartTime).utc().format('YYYY-MM-DDTHH:mm:ss.SS')}~1~117F37~8${ChronoTrackFrameTerminator}`,
+      ),
+      'it should be possible to send a TimingRead through the socket',
+    );
+    // give the server some time to answer!
+    await sleep(500);
+  }
+});
+
+test('should be possible to find the correct client config messages in the server welcome messages for (guntimes, newlocations, connection-id, stream-mode and time-format)', (t) => {
+  t.true(state.chronoTrack.fromServiceMessages.includes('guntimes=true'), 'guntimes=true should be in the server welcome messages');
+  t.true(state.chronoTrack.fromServiceMessages.includes('newlocations=true'), 'newlocations=true should be in the server welcome messages');
+  t.true(state.chronoTrack.fromServiceMessages.includes('connection-id=false'), 'connection-id=false should be in the server welcome messages');
+  t.true(state.chronoTrack.fromServiceMessages.includes('stream-mode=push'), 'stream-mode=push should be in the server welcome messages');
+  t.true(state.chronoTrack.fromServiceMessages.includes('time-format=iso'), 'time-format=iso should be in the server welcome messages');
+});
+
+hasChronoTrckForwarderInstance &&
+  test('it should be possible to get a list of connected chronotrack clients', async (t) => {
+    t.true(state.chronoTrack.forwarder != null, 'forwarder should be initialized but is not');
+    if (state.chronoTrack.forwarder != null) {
+      t.true(Array.isArray(state.chronoTrack.forwarder?.getConnectedChronoTrackDevices()), 'connectedClients should be an array');
+
+      t.true(state.chronoTrack.forwarder.getConnectedChronoTrackDevices().length > 0, 'connectedClients should have more than 0 entries');
+      state.chronoTrack.connectedClients = state.chronoTrack.forwarder.getConnectedChronoTrackDevices();
+    }
+  });
+
+hasChronoTrckForwarderInstance &&
+  test('it should be possible to find our RacemapTestClient among all connected Clients', async (t) => {
+    t.true(state.chronoTrack.connectedClients.length > 0, 'connectedClients should have more than 0 entries');
+    const client = state.chronoTrack.connectedClients.find((c) => c.meta.name === 'RacemapTestClient');
+    t.not(client, null, 'should have RacemapTestClient but found no connected client.');
+    if (client != null) {
+      t.not(client.meta, null, 'client.meta should not be null');
+      t.is(client.meta.name, 'RacemapTestClient', 'client.meta.name should be RacemapTestClient');
+      t.not(client.meta.event, null, 'client.meta.event should not be null');
+      t.is(client.meta?.event?.name, fixtures.chronoTrack.event.name, 'client.meta.event.name should be fixtures.event.name');
+      t.is(
+        client.meta?.event?.description,
+        fixtures.chronoTrack.event.description,
+        'client.meta.event.description should be fixtures.event.description',
+      );
+      t.true(Array.isArray(client.meta.locations), 'client.meta.locations should be an array');
+      t.is(client.meta.locations.length, 8, 'client.meta.locations should have 8 entries');
+    }
+  });
+
+test('should send a new location through the socket', async (t) => {
+  t.not(state.chronoTrack.aTCPClient, null, 'tcp client should be initialized but is not');
+  if (state.chronoTrack.aTCPClient != null) {
+    fixtures.chronoTrack.event.locations.push({
+      name: fixtures.chronoTrack.newLocationName,
+      mac: `${shortId001}_${fixtures.chronoTrack.event.locations.length}`,
+    });
+    t.true(
+      await state.chronoTrack.aTCPClient.write(
+        `CT01_33~12388~${fixtures.chronoTrack.newLocationName}~${ChronoTrackCommands.newlocation}~${moment(times.testStartTime)
+          .utc()
+          .format('YYYY-MM-DDTHH:mm:ss.SS')}~0~0~0${ChronoTrackFrameTerminator}`,
+      ),
+      'it should be possible to send a new location through the socket',
+    );
+    // give the server some time to answer!
+    await sleep(1500);
+  }
+});
+
+hasChronoTrckForwarderInstance &&
+  test('it should be possible to get an updated list of connected chronotrack clients', async (t) => {
+    t.not(state.chronoTrack.forwarder, null, 'forwarder should be initialized but is not');
+    if (state.chronoTrack.forwarder != null) {
+      t.true(Array.isArray(state.chronoTrack.forwarder?.getConnectedChronoTrackDevices()), 'connectedClients should be an array');
+      t.true(state.chronoTrack.forwarder.getConnectedChronoTrackDevices().length > 0, 'connectedClients should have more than 0 entries');
+      state.chronoTrack.connectedClients = state.chronoTrack.forwarder.getConnectedChronoTrackDevices();
+    }
+  });
+
+hasChronoTrckForwarderInstance &&
+  test('it should be possible to find our new location in the connected RacemapTestClient metadata', async (t) => {
+    t.true(state.chronoTrack.connectedClients.length > 0, 'connectedClients should have more than 0 entries');
+    const client = state.chronoTrack.connectedClients.find((c) => c.meta.name === 'RacemapTestClient');
+    t.not(client, null, 'should have RacemapTestClient but found no connected client.');
+    if (client != null) {
+      t.not(client.meta, null, 'client.meta should not be null');
+      t.is(client.meta.name, 'RacemapTestClient', 'client.meta.name should be RacemapTestClient');
+      t.not(client.meta.event, null, 'client.meta.event should not be null');
+      t.is(client.meta?.event?.name, fixtures.chronoTrack.event.name, 'client.meta.event.name should be fixtures.event.name');
+      t.is(
+        client.meta?.event?.description,
+        fixtures.chronoTrack.event.description,
+        'client.meta.event.description should be fixtures.event.description',
+      );
+      t.true(Array.isArray(client.meta.locations), 'client.meta.locations should be an array');
+      t.is(client.meta.locations.length, 9, 'client.meta.locations should have 9 entries');
+      t.true(client.meta.locations.includes(fixtures.chronoTrack.newLocationName), 'client.meta.locations should include fixtures.newLocationName');
+    }
+  });
+
+test('it should be possible to find 2 start transmission frames received from the server. 1 unspecific and one specific for the newLocation', async (t) => {
+  t.true(state.chronoTrack.fromServiceMessages.includes(ChronoTrackCommands.start), 'should have received a start transmission frame');
+  t.true(
+    state.chronoTrack.fromServiceMessages.includes(`${ChronoTrackCommands.start}~${fixtures.chronoTrack.newLocationName}`),
+    'should have received a start transmission frame with the new location name',
+  );
+});
+
+/*
+test("it should be possible to obtain all generated TimingReads from the TimingRead_output adapter", async (t) => {
+  state.chronoTimingReads = await apiClient.getTimingReads({
+    timingIds: fixtures.timingMacs,
+    startTime: times.startTime,
+    endTime: times.endTime,
+  });
+
+  t.true(Array.isArray(state.chronoTimingReads), "aListOfChronoTimingReads should be an array");
+  t.true(state.chronoTimingReads.length > 0, "aListOfChronoTimingReads should have more than 0 entries");
+});
+
+
+it('The result of the query must be an array and not be empty', () => {
+  expect(state.aListOfChronoTimingReads).to.be.an('array');
+  expect(state.aListOfChronoTimingReads.length).to.be.above(0);
+});
+
+it(`Every ping has to be older then ${times.startTime} and younger then ${times.endTime}.`, () => {
+  for (const aRead of state.aListOfChronoTimingReads) {
+    expect(Date.parse(aRead.timestamp)).to.be.within(
+      Date.parse(times.startTime),
+      Date.parse(times.endTime),
+    );
+  }
+});
+
+it(`Every timingId has to be in ${fixtures?.timingMacs}.`, () => {
+  for (const aRead of state.aListOfChronoTimingReads) {
+    expect(fixtures.timingMacs).to.include(aRead.timingId);
+  }
+});
+
+it('should disconnect from client', async () => {
+  if (aTCPClient == null) expect.fail('tcp client is not initialized');
+
+  await aTCPClient.end();
+});
+*/
 
 test('should wait 20 seconds before kill', async (t) => {
   t.timeout(30000);

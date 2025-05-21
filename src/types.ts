@@ -2,7 +2,7 @@ import type net from 'node:net';
 import type MyLapsForwarder from './main/mylaps/forwarder';
 import type ChronoTrackForwarder from './main/chronoTrack/forwarder';
 import type { ServiceVersion } from './version';
-import type { ChronoTrackForwarderState } from './main/chronoTrack/types';
+import type { ChronoTrackDevice, ChronoTrackForwarderState } from './main/chronoTrack/types';
 import type { MyLapsDevice, MyLapsForwarderState, MyLapsLocation } from './main/mylaps/types';
 
 export type RacemapStarter = {
@@ -147,5 +147,6 @@ export type TTestState = {
       lastTime: number;
       buffer: Buffer;
     };
+    connectedClients: Array<ChronoTrackDevice>;
   };
 };
