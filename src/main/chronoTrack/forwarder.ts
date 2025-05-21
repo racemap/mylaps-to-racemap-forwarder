@@ -20,6 +20,7 @@ import {
   ChronoTrackCommands,
   ChronoTrackFeatures,
   ChronoTrackWelcomeMessage,
+  ChronoTrack2RMServiceName,
   ChronoTrackFrameTerminator,
   MAX_MESSAGE_DATA_DELAY_IN_MS,
 } from './consts';
@@ -89,7 +90,7 @@ class ChronoTrackForwarder extends BaseClass {
   _configureReceiverSocket = (listenPort: number, bindAddress: string): net.Server => {
     const server = net.createServer(this._onNewConnection as (socket: net.Socket) => void);
     server.listen({ host: bindAddress, port: listenPort }, () => {
-      info(`${this.className} is listening on \x1b[32m${bindAddress}\x1b[0m:\x1b[35m${listenPort}\x1b[0m`);
+      info(`${ChronoTrack2RMServiceName} is listening on \x1b[32m${bindAddress}\x1b[0m:\x1b[35m${listenPort}\x1b[0m`);
     });
     server.on('error', (err) => {
       error(`${this.className}._configureReceiverSocket`, err);

@@ -1,7 +1,10 @@
+import { ToRacemapForwarderVersion } from '../../version';
+
 export const SUPPORTED_PROTOCOL = 'CTP01';
 export const ChronoTrackFrameTerminator = '\r\n';
 export const MAX_MESSAGE_DATA_DELAY_IN_MS = 500;
-export const ChronoTrackWelcomeMessage = 'RacemapChronoTrackReceiver~v1.0.0';
+export const ChronoTrack2RMServiceName = `ChronoTrack2RMForwarder_${ToRacemapForwarderVersion.gitTag.split('_')[0]}`;
+export const ChronoTrackWelcomeMessage = `ChronoTrack2RMForwarder~${ToRacemapForwarderVersion.gitTag.split('_')[0]}`;
 
 export const ChronoTrackFeatures = {
   guntimes: 'true',

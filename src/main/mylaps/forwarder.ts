@@ -12,8 +12,8 @@ import {
   MyLapsFunctions,
   MyLapsIdentifiers,
   MyLapsDataSeparator,
+  MyLaps2RMServiceName,
   MyLapsFrameTerminator,
-  RacemapMyLapsServerName,
   MAX_MESSAGE_DATA_DELAY_IN_MS,
 } from './consts';
 
@@ -83,7 +83,7 @@ class MyLapsForwarder extends BaseClass {
   _configureReceiverSocket = (listenPort: number, bindAddress: string): net.Server => {
     const server = net.createServer(this._onNewConnection as (socket: net.Socket) => void);
     server.listen({ host: bindAddress, port: listenPort }, () => {
-      info(`${RacemapMyLapsServerName} is listening on \x1b[32m${bindAddress}\x1b[0m:\x1b[35m${listenPort}\x1b[0m`);
+      info(`${MyLaps2RMServiceName} is listening on \x1b[32m${bindAddress}\x1b[0m:\x1b[35m${listenPort}\x1b[0m`);
     });
     server.on('error', (err) => {
       error(`${this.className}._configureReceiverSocket`, err);
