@@ -29,7 +29,7 @@ const RacemapBaseSection = (): React.ReactNode => {
     api.setExpertMode(!appState.expertMode);
   };
 
-  const onChange = (eventId: string) => {
+  const onChange = (eventId?: string) => {
     api.selectRacemapEvent(eventId);
   };
 
@@ -124,6 +124,7 @@ const RacemapBaseSection = (): React.ReactNode => {
               onChange={onChange}
               onSearch={onSearch}
               disabled={!appState?.apiTokenIsValid}
+              allowClear
               options={appState?.events?.map((event) => ({
                 label: event.name,
                 value: event.id,

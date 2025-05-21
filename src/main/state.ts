@@ -129,16 +129,23 @@ export async function prepareServerState(webContents: Electron.WebContents): Pro
   }
 }
 
-export async function selectRacemapEvent(eventId: string): Promise<void> {
-  const event = await apiClient.getEventById(eventId);
-  const starters = await apiClient.getEventStarters(eventId);
-  if (event) {
-    updateServerState({
-      starters,
-      selectedEvent: event,
-    });
+export async function selectRacemapEvent(eventId?: string): Promise<void> {
+  if (eventId) {
+    const selectedEvent = await apiClient.getEventById(eventId);
+    if (selectedEvent) {
+      const starters = await apiClient.getEventStarters(eventId);
+      updateServerState({
+        starters,
+        selectedEvent,
+      });
+    } else {
+      error('No event found with id', eventId);
+    }
   } else {
-    error('No event found with id', eventId);
+    updateServerState({
+      selectedEvent: null,
+      starters: [],
+    });
   }
 }
 

@@ -171,7 +171,7 @@ class MyLapsForwarder extends BaseClass {
     socket.sendKeepAlivePing = () => {
       // old version says you should send Pong
       // version 2.1 says you should send Ping
-      socket.sendData([RacemapMyLapsServerName, MyLapsFunctions.Ping]);
+      socket.sendData([MyLaps2RMServiceName, MyLapsFunctions.Ping]);
     };
 
     socket.keepAliveTimerHandle = setInterval(() => {
@@ -210,9 +210,9 @@ class MyLapsForwarder extends BaseClass {
     if (parts.length === 3 && (parts[1] === MyLapsFunctions.Ping || parts[1] === MyLapsFunctions.Pong)) {
       refToSocket.identified = true;
 
-      refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPong, '@Version2.1']);
-      refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetLocations]);
-      refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetInfo]);
+      refToSocket.sendData([MyLaps2RMServiceName, MyLapsFunctions.AckPong, '@Version2.1']);
+      refToSocket.sendData([MyLaps2RMServiceName, MyLapsFunctions.GetLocations]);
+      refToSocket.sendData([MyLaps2RMServiceName, MyLapsFunctions.GetInfo]);
     } else {
       warn(`${this.className}._handleWelcomeMessage`, 'Unknown welcome message.', parts);
     }
@@ -245,7 +245,7 @@ class MyLapsForwarder extends BaseClass {
       };
       refToSocket.meta.locations[update.locationName] = location;
       // if we get a new location we ask the client for the connected hardware => readers and so
-      refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.GetInfo, update.locationName]);
+      refToSocket.sendData([MyLaps2RMServiceName, MyLapsFunctions.GetInfo, update.locationName]);
     } else {
       location.lastSeen = new Date();
       if (update.computerName != null) {
@@ -267,7 +267,7 @@ class MyLapsForwarder extends BaseClass {
         const myLapsFunction = parts[1];
         switch (myLapsFunction) {
           case MyLapsFunctions.Pong: {
-            const replied = refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPong]);
+            const replied = refToSocket.sendData([MyLaps2RMServiceName, MyLapsFunctions.AckPong]);
             const locationName = parts[0];
             this._createOrUpdateLocation(refToSocket, { locationName });
             info(`${this.className}._handleMessages Pong received from client and ${replied ? 'answered' : 'not answered'}.`);
@@ -283,7 +283,7 @@ class MyLapsForwarder extends BaseClass {
           }
 
           case MyLapsFunctions.Ping: {
-            const replied = refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPing]);
+            const replied = refToSocket.sendData([MyLaps2RMServiceName, MyLapsFunctions.AckPing]);
             const locationName = parts[0];
             this._createOrUpdateLocation(refToSocket, { locationName });
             info(`${this.className}._handleMessages Ping received from client and ${replied ? 'answered' : 'not answered'}.`);
@@ -373,7 +373,7 @@ class MyLapsForwarder extends BaseClass {
                     warn(`${this.className}._handleMessages`, 'Passing message with missing keys received:', passing);
                   }
                 }
-                refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckPassing, counter.toString()]);
+                refToSocket.sendData([MyLaps2RMServiceName, MyLapsFunctions.AckPassing, counter.toString()]);
               }
               if (reads.length > 0) {
                 this._pushNonlocatedReadToRacemap(reads);
@@ -415,7 +415,7 @@ class MyLapsForwarder extends BaseClass {
                 refToSocket.forwardedReads += reads.length;
                 this._forwardedReads += reads.length;
               }
-              refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckStore, counter.toString()]);
+              refToSocket.sendData([MyLaps2RMServiceName, MyLapsFunctions.AckStore, counter.toString()]);
             }
             if (refToSocket.meta.locations[locationName] != null) {
               refToSocket.meta.locations[locationName].lastSeen = new Date();
@@ -439,7 +439,7 @@ class MyLapsForwarder extends BaseClass {
               }
               // we always answer with the counter
               warn(`We received ${markers.length} Markers. But do not know what to do with them. So we drop them`);
-              refToSocket.sendData([RacemapMyLapsServerName, MyLapsFunctions.AckMarker, counter.toString()]);
+              refToSocket.sendData([MyLaps2RMServiceName, MyLapsFunctions.AckMarker, counter.toString()]);
             }
 
             break;

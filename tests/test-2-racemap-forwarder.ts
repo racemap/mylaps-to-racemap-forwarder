@@ -33,88 +33,122 @@ const times: TPredictionTestTimes = {
 };
 
 const fixtures: TTestFixtures = {
-  id: shortId001,
-  clientName: 'RMMyLabsTestClient',
-  trasnponderIds: ['0000041', '0000042', '0000043'],
-  myLapsLocations: [
-    {
-      name: 'Start',
-      locationName: `Dev_${shortIdBuilder()}`,
-      computerName: `computer_${shortIdBuilder()}`,
-      mac: `${shortId001}_0`,
-      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((0 * OneHourInMillis) / 7),
-      devicesByName: {},
+  myLaps: {
+    id: shortId001,
+    clientName: 'RMMyLabsTestClient',
+    trasnponderIds: ['0000041', '0000042', '0000043'],
+    myLapsLocations: [
+      {
+        name: 'Start',
+        locationName: `Dev_${shortIdBuilder()}`,
+        computerName: `computer_${shortIdBuilder()}`,
+        mac: `${shortId001}_0`,
+        startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((0 * OneHourInMillis) / 7),
+        devicesByName: {},
+      },
+      {
+        name: '1k',
+        locationName: `Dev_${shortIdBuilder()}`,
+        computerName: `computer_${shortIdBuilder()}`,
+        mac: `${shortId001}_1`,
+        startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((1 * OneHourInMillis) / 7),
+        devicesByName: {},
+      },
+      {
+        name: '2k',
+        locationName: `Dev_${shortIdBuilder()}`,
+        computerName: `computer_${shortIdBuilder()}`,
+        mac: `${shortId001}_2`,
+        startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((2 * OneHourInMillis) / 7),
+        devicesByName: {},
+      },
+      {
+        name: '3k',
+        locationName: `Dev_${shortIdBuilder()}`,
+        computerName: `computer_${shortIdBuilder()}`,
+        mac: `${shortId001}_3`,
+        startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((3 * OneHourInMillis) / 7),
+        devicesByName: {},
+      },
+      {
+        name: '5k',
+        locationName: `Dev_${shortIdBuilder()}`,
+        computerName: `computer_${shortIdBuilder()}`,
+        mac: `${shortId001}_4`,
+        startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((4 * OneHourInMillis) / 7),
+        devicesByName: {},
+      },
+      {
+        name: '8k',
+        locationName: `Dev_${shortIdBuilder()}`,
+        computerName: `computer_${shortIdBuilder()}`,
+        mac: `${shortId001}_5`,
+        startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((5 * OneHourInMillis) / 7),
+        devicesByName: {},
+      },
+      {
+        name: '9k',
+        locationName: `Dev_${shortIdBuilder()}`,
+        computerName: `computer_${shortIdBuilder()}`,
+        mac: `${shortId001}_6`,
+        startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((6 * OneHourInMillis) / 7),
+        devicesByName: {},
+      },
+      {
+        name: 'Finish',
+        locationName: `Dev_${shortIdBuilder()}`,
+        computerName: `computer_${shortIdBuilder()}`,
+        mac: `${shortId001}_7`,
+        startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((7 * OneHourInMillis) / 7),
+        devicesByName: {},
+      },
+    ],
+    passingString: 't=13:11:30.904|c=0000041|ct=UH|d=120606|l=13|dv=4|re=0|an=00001111|g=0|b=41|n=41',
+    legacyPassingString: 'KV8658316:13:57.417 3 0F  1000025030870',
+  },
+  chronoTrack: {
+    event: {
+      id: shortId001,
+      name: `Testevent for ChronoTrack Test (${shortId001})`,
+      description: `Just to test the data import. (${shortId001})`,
+      locations: [
+        { name: 'Start', mac: `${shortId001}_0` },
+        { name: '1k', mac: `${shortId001}_1` },
+        { name: '2k', mac: `${shortId001}_2` },
+        { name: '3k', mac: `${shortId001}_3` },
+        { name: '5k', mac: `${shortId001}_4` },
+        { name: '8k', mac: `${shortId001}_5` },
+        { name: '9k', mac: `${shortId001}_6` },
+        { name: 'Finish', mac: `${shortId001}_7` },
+      ],
     },
-    {
-      name: '1k',
-      locationName: `Dev_${shortIdBuilder()}`,
-      computerName: `computer_${shortIdBuilder()}`,
-      mac: `${shortId001}_1`,
-      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((1 * OneHourInMillis) / 7),
-      devicesByName: {},
-    },
-    {
-      name: '2k',
-      locationName: `Dev_${shortIdBuilder()}`,
-      computerName: `computer_${shortIdBuilder()}`,
-      mac: `${shortId001}_2`,
-      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((2 * OneHourInMillis) / 7),
-      devicesByName: {},
-    },
-    {
-      name: '3k',
-      locationName: `Dev_${shortIdBuilder()}`,
-      computerName: `computer_${shortIdBuilder()}`,
-      mac: `${shortId001}_3`,
-      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((3 * OneHourInMillis) / 7),
-      devicesByName: {},
-    },
-    {
-      name: '5k',
-      locationName: `Dev_${shortIdBuilder()}`,
-      computerName: `computer_${shortIdBuilder()}`,
-      mac: `${shortId001}_4`,
-      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((4 * OneHourInMillis) / 7),
-      devicesByName: {},
-    },
-    {
-      name: '8k',
-      locationName: `Dev_${shortIdBuilder()}`,
-      computerName: `computer_${shortIdBuilder()}`,
-      mac: `${shortId001}_5`,
-      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((5 * OneHourInMillis) / 7),
-      devicesByName: {},
-    },
-    {
-      name: '9k',
-      locationName: `Dev_${shortIdBuilder()}`,
-      computerName: `computer_${shortIdBuilder()}`,
-      mac: `${shortId001}_6`,
-      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((6 * OneHourInMillis) / 7),
-      devicesByName: {},
-    },
-    {
-      name: 'Finish',
-      locationName: `Dev_${shortIdBuilder()}`,
-      computerName: `computer_${shortIdBuilder()}`,
-      mac: `${shortId001}_7`,
-      startTimeStamp: new Date(times.startTime).valueOf() + Math.floor((7 * OneHourInMillis) / 7),
-      devicesByName: {},
-    },
-  ],
-  passingString: 't=13:11:30.904|c=0000041|ct=UH|d=120606|l=13|dv=4|re=0|an=00001111|g=0|b=41|n=41',
-  legacyPassingString: 'KV8658316:13:57.417 3 0F  1000025030870',
+    newLocationName: 'OnBridge',
+    connectionId: `g4vnkHCHU8SbsDMF${shortId001}`,
+    transponderId: shortId001,
+    timingMacs: [],
+  },
 };
 
 const state: TTestState = {
-  aTCPClient: null,
-  forwarder: null,
-  fromServerMessages: [],
-  socketCache: {
-    lastTime: 0,
-    buffer: Buffer.alloc(0),
+  myLaps: {
+    aTCPClient: null,
+    forwarder: null,
+    fromServiceMessages: [],
+    socketCache: {
+      lastTime: 0,
+      buffer: Buffer.alloc(0),
+    },
+    passingAttempts: [],
   },
-  passingAttempts: [],
+  chronoTrack: {
+    aTCPClient: null,
+    forwarder: null,
+    fromServiceMessages: [],
+    socketCache: {
+      lastTime: 0,
+      buffer: Buffer.alloc(0),
+    },
+  },
 };
 
 test('Ava is running, fixtures and state exists', async (t) => {
@@ -146,7 +180,7 @@ test('Test function removeCertainBytesFromBuffer', (t) => {
 });
 
 test('Test function myLapsLagacyPassingToRead', (t) => {
-  const read = myLapsLagacyPassingToRead('Start', fixtures.legacyPassingString);
+  const read = myLapsLagacyPassingToRead('Start', fixtures.myLaps.legacyPassingString);
 
   t.not(read, null, 'read should not be null');
   t.is(read?.chipId, `${MyLapsPrefix}KV86583`, 'chipId should be KV86583');
@@ -156,7 +190,7 @@ test('Test function myLapsLagacyPassingToRead', (t) => {
 });
 
 test('Test function myLapsPassingToRead', (t) => {
-  const read = myLapsPassingToRead('Start001', 'Start', fixtures.passingString);
+  const read = myLapsPassingToRead('Start001', 'Start', fixtures.myLaps.passingString);
   t.not(read, null, 'read should not be null');
   t.is(read?.chipId, `${MyLapsPrefix}0000041`, 'chipId should be 0000041');
   t.is(read?.timingId, 'Start001', 'timingId should be Start001');
@@ -169,42 +203,42 @@ test('Try to spin up an instance of the mylaps forwarder', async (t) => {
     t.log(`Port ${LISTEN_PORT} is already in use. We do not have to spin a server.`);
     t.pass();
   } else {
-    state.forwarder = new MyLapsForwarder(apiClient, LISTEN_PORT);
-    t.not(state.forwarder, null, 'instance of MyLapsForwarder is not null');
+    state.myLaps.forwarder = new MyLapsForwarder(apiClient, LISTEN_PORT);
+    t.not(state.myLaps.forwarder, null, 'instance of MyLapsForwarder is not null');
   }
 });
 
 test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) => {
-  state.aTCPClient = await connectTcpSocket(forwarderIPAddress, LISTEN_PORT);
-  t.not(state.aTCPClient, null, 'tcp client should be not null but is');
-  if (state.aTCPClient != null) {
-    state.aTCPClient.sendFrame = (text: string) => {
-      if (state.aTCPClient != null) {
-        return state.aTCPClient.write(`${text}${MyLapsFrameTerminator}`);
+  state.myLaps.aTCPClient = await connectTcpSocket(forwarderIPAddress, LISTEN_PORT);
+  t.not(state.myLaps.aTCPClient, null, 'tcp client should be not null but is');
+  if (state.myLaps.aTCPClient != null) {
+    state.myLaps.aTCPClient.sendFrame = (text: string) => {
+      if (state.myLaps.aTCPClient != null) {
+        return state.myLaps.aTCPClient.write(`${text}${MyLapsFrameTerminator}`);
       }
       return false;
     };
 
-    state.aTCPClient.sendData = (data: Array<string>) => {
+    state.myLaps.aTCPClient.sendData = (data: Array<string>) => {
       const dataStr = data.join(MyLapsDataSeparator);
-      if (state.aTCPClient != null) {
-        return state.aTCPClient.sendFrame(`${dataStr}${MyLapsDataSeparator}`);
+      if (state.myLaps.aTCPClient != null) {
+        return state.myLaps.aTCPClient.sendFrame(`${dataStr}${MyLapsDataSeparator}`);
       }
       return false;
     };
 
-    state.aTCPClient.on('connect', () => {
+    state.myLaps.aTCPClient.on('connect', () => {
       t.log('Connected to the server');
     });
 
-    state.aTCPClient.on('data', (data: Buffer) => {
-      storeIncomingRawData(data, state.socketCache);
+    state.myLaps.aTCPClient.on('data', (data: Buffer) => {
+      storeIncomingRawData(data, state.myLaps.socketCache);
       processStoredData(
-        state.socketCache,
+        state.myLaps.socketCache,
         (message) => {
-          if (state.aTCPClient == null) return;
+          if (state.myLaps.aTCPClient == null) return;
           const messageStr = message.toString();
-          state.fromServerMessages.push(messageStr);
+          state.myLaps.fromServiceMessages.push(messageStr);
           const parts = messageStr.split(MyLapsDataSeparator);
           const len = parts.length;
           if (len > 2) {
@@ -214,31 +248,31 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
             switch (myLabsFunction) {
               case MyLapsFunctions.Pong: {
                 t.log('Pong from server => AckPong');
-                state.aTCPClient.sendData([fixtures.clientName, MyLapsFunctions.AckPong]);
+                state.myLaps.aTCPClient.sendData([fixtures.myLaps.clientName, MyLapsFunctions.AckPong]);
                 break;
               }
 
               case MyLapsFunctions.Ping: {
                 t.log('Ping from server => AckPing');
-                state.aTCPClient.sendData([fixtures.clientName, MyLapsFunctions.AckPing]);
+                state.myLaps.aTCPClient.sendData([fixtures.myLaps.clientName, MyLapsFunctions.AckPing]);
                 break;
               }
 
               case MyLapsFunctions.GetLocations: {
                 t.log('GetLocations from server => GetLocations');
-                const data = [fixtures.clientName, MyLapsFunctions.GetLocations];
-                for (const location of fixtures.myLapsLocations) {
+                const data = [fixtures.myLaps.clientName, MyLapsFunctions.GetLocations];
+                for (const location of fixtures.myLaps.myLapsLocations) {
                   data.push(`${MyLapsIdentifiers.LocationParameters.LocationName}=${location.name}`);
                 }
-                state.aTCPClient?.sendData(data);
+                state.myLaps.aTCPClient?.sendData(data);
                 break;
               }
 
               case MyLapsFunctions.GetInfo: {
                 t.log('GetInfo from server => AckGetInfo');
                 // if it request an explicit location we only answer for this
-                for (const location of fixtures.myLapsLocations) {
-                  state.aTCPClient?.sendData([
+                for (const location of fixtures.myLaps.myLapsLocations) {
+                  state.myLaps.aTCPClient?.sendData([
                     location.name,
                     MyLapsFunctions.AckGetInfo,
                     location.locationName ?? '',
@@ -278,22 +312,25 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
 });
 
 test('should send the welcome message through the socket', async (t) => {
-  t.not(state.aTCPClient, null, 'tcp client is not null');
-  if (state.aTCPClient != null) {
-    t.true(state.aTCPClient.sendData([fixtures.clientName, MyLapsFunctions.Pong]), 'it should be possible to write a welcome message to the socket');
+  t.not(state.myLaps.aTCPClient, null, 'tcp client is not null');
+  if (state.myLaps.aTCPClient != null) {
+    t.true(
+      state.myLaps.aTCPClient.sendData([fixtures.myLaps.clientName, MyLapsFunctions.Pong]),
+      'it should be possible to write a welcome message to the socket',
+    );
     // give the server some time to answer!
     await sleep(500);
   }
 });
 
 test('the server should have responded with AckPong and GetLocations and GetInfo', async (t) => {
-  t.log('server messages', state.fromServerMessages);
+  t.log('server messages', state.myLaps.fromServiceMessages);
 
-  t.not(state.fromServerMessages, null, 'server messages should not be null');
-  t.true(state.fromServerMessages.length > 0, 'server messages should have some content');
-  const ackPong = state.fromServerMessages.find((message) => message.includes(MyLapsFunctions.AckPong));
-  const getLocations = state.fromServerMessages.find((message) => message.includes(MyLapsFunctions.GetLocations));
-  const getInfo = state.fromServerMessages.find((message) => message.includes(MyLapsFunctions.GetInfo));
+  t.not(state.myLaps.fromServiceMessages, null, 'server messages should not be null');
+  t.true(state.myLaps.fromServiceMessages.length > 0, 'server messages should have some content');
+  const ackPong = state.myLaps.fromServiceMessages.find((message) => message.includes(MyLapsFunctions.AckPong));
+  const getLocations = state.myLaps.fromServiceMessages.find((message) => message.includes(MyLapsFunctions.GetLocations));
+  const getInfo = state.myLaps.fromServiceMessages.find((message) => message.includes(MyLapsFunctions.GetInfo));
 
   t.not(ackPong, undefined, 'server should have responded with AckPong');
   t.not(getLocations, undefined, 'server should have responded with GetLocations');
@@ -301,17 +338,17 @@ test('the server should have responded with AckPong and GetLocations and GetInfo
 });
 
 test('it should be possible to send 3 passings for every location to the server', async (t) => {
-  t.not(state.aTCPClient, null, 'tcp client is not null');
-  if (state.aTCPClient != null) {
+  t.not(state.myLaps.aTCPClient, null, 'tcp client is not null');
+  if (state.myLaps.aTCPClient != null) {
     // for every location we define 3 passings
-    for (const location of fixtures.myLapsLocations) {
+    for (const location of fixtures.myLaps.myLapsLocations) {
       const Attempt = Math.round(100 * Math.random()).toString();
       const passings = [location.name, MyLapsFunctions.Passing];
       for (let i = 0; i < 3; i++) {
         if (location.startTimeStamp != null) {
           const passing = [
             `${MyLapsIdentifiers.PassingParameters.Time}=${moment(location.startTimeStamp + i * OneSecondInMillis).format('HH:mm:ss.SSS')}`,
-            `${MyLapsIdentifiers.PassingParameters.ChipCode}=${fixtures.trasnponderIds[i]}`,
+            `${MyLapsIdentifiers.PassingParameters.ChipCode}=${fixtures.myLaps.trasnponderIds[i]}`,
             `${MyLapsIdentifiers.PassingParameters.ChipType}=UH`,
             `${MyLapsIdentifiers.PassingParameters.Date}=${moment(location.startTimeStamp + i * OneSecondInMillis).format('YYMMDD')}`,
             `${MyLapsIdentifiers.PassingParameters.LapNumber}=1`,
@@ -325,30 +362,30 @@ test('it should be possible to send 3 passings for every location to the server'
         }
       }
       passings.push(Attempt);
-      state.passingAttempts.push(Attempt);
-      t.true(state.aTCPClient.sendData(passings), 'it should be possible to write a passings message to the socket');
+      state.myLaps.passingAttempts.push(Attempt);
+      t.true(state.myLaps.aTCPClient.sendData(passings), 'it should be possible to write a passings message to the socket');
     }
     await sleep(500);
   }
 });
 
 test('the server should have responded with AckPassing for every passing', async (t) => {
-  t.not(state.fromServerMessages, null, 'server messages should not be null');
-  t.true(state.fromServerMessages.length > 0, 'server messages should have some content');
-  const ackPassing = state.fromServerMessages.filter((message) => message.includes(MyLapsFunctions.AckPassing));
-  t.is(ackPassing.length, state.passingAttempts.length, 'server should have responded with AckPassing for every passing');
-  for (const attempt of state.passingAttempts) {
+  t.not(state.myLaps.fromServiceMessages, null, 'server messages should not be null');
+  t.true(state.myLaps.fromServiceMessages.length > 0, 'server messages should have some content');
+  const ackPassing = state.myLaps.fromServiceMessages.filter((message) => message.includes(MyLapsFunctions.AckPassing));
+  t.is(ackPassing.length, state.myLaps.passingAttempts.length, 'server should have responded with AckPassing for every passing');
+  for (const attempt of state.myLaps.passingAttempts) {
     const ack = ackPassing.find((message) => message.includes(attempt));
     t.not(ack, undefined, `server should have responded with AckPassing for attempt ${attempt}`);
   }
 });
 
 test('it should be possibel to send 3 markers to the server', async (t) => {
-  t.not(state.aTCPClient, null, 'tcp client is not null');
-  if (state.aTCPClient != null) {
+  t.not(state.myLaps.aTCPClient, null, 'tcp client is not null');
+  if (state.myLaps.aTCPClient != null) {
     const attempt = Math.round(100 * Math.random()).toString();
     const marker = [
-      fixtures.myLapsLocations[0].name,
+      fixtures.myLaps.myLapsLocations[0].name,
       MyLapsFunctions.Marker,
       [
         `${MyLapsIdentifiers.MarkerParameters.Time}=11:03:40.347`,
@@ -367,16 +404,16 @@ test('it should be possibel to send 3 markers to the server', async (t) => {
       ].join('|'),
       attempt,
     ];
-    t.true(state.aTCPClient.sendData(marker), 'it should be possible to write a marker message to the socket');
+    t.true(state.myLaps.aTCPClient.sendData(marker), 'it should be possible to write a marker message to the socket');
     await sleep(500);
   }
 });
 
 test('the server should have responded with AckMarker for the last marker telegram', async (t) => {
-  t.log('server messages', state.fromServerMessages);
-  t.not(state.fromServerMessages, null, 'server messages should not be null');
-  t.true(state.fromServerMessages.length > 0, 'server messages should have some content');
-  const ackMarker = state.fromServerMessages.find((message) => message.includes(MyLapsFunctions.AckMarker));
+  t.log('server messages', state.myLaps.fromServiceMessages);
+  t.not(state.myLaps.fromServiceMessages, null, 'server messages should not be null');
+  t.true(state.myLaps.fromServiceMessages.length > 0, 'server messages should have some content');
+  const ackMarker = state.myLaps.fromServiceMessages.find((message) => message.includes(MyLapsFunctions.AckMarker));
   t.not(ackMarker, undefined, 'server should have responded with AckMarker');
 });
 

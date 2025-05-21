@@ -26,7 +26,7 @@
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
-    "test": "yarn build-tests && dotenv-load ava .build/test-mylaps-forwarder.js",
+    "test": "yarn build-tests && dotenv-load ava .build/test-2-racemap-forwarder.js",
     "bundle": "yarn build-linux && yarn build-mac && yarn build-win",
     "release": "yarn bundle && node ./scripts/rename-binaries.mjs",
     "pretty": "prettier --write .",
@@ -90,7 +90,7 @@
     "cache": false,
     "timeout": "30s",
     "files": [
-      ".build/test-mylaps-forwarder.js"
+      ".build/test-2-racemap-forwarder.js"
     ]
   }
 }

@@ -1,5 +1,6 @@
 import type net from 'node:net';
 import type MyLapsForwarder from './main/mylaps/forwarder';
+import type ChronoTrackForwarder from './main/chronoTrack/forwarder';
 import type { ServiceVersion } from './version';
 import type { ChronoTrackForwarderState } from './main/chronoTrack/types';
 import type { MyLapsDevice, MyLapsForwarderState, MyLapsLocation } from './main/mylaps/types';
@@ -102,21 +103,49 @@ export type TPredictionTestTimes = {
 };
 
 export type TTestFixtures = {
-  id: string;
-  clientName: string;
-  trasnponderIds: Array<string>;
-  myLapsLocations: Array<MyLapsLocation>;
-  passingString: string;
-  legacyPassingString: string;
+  myLaps: {
+    id: string;
+    clientName: string;
+    trasnponderIds: Array<string>;
+    myLapsLocations: Array<MyLapsLocation>;
+    passingString: string;
+    legacyPassingString: string;
+  };
+  chronoTrack: {
+    event: {
+      id: string;
+      name: string;
+      description: string;
+      locations: Array<{
+        name: string;
+        mac: string;
+      }>;
+    };
+    newLocationName: string;
+    connectionId: string;
+    transponderId: string;
+    timingMacs: Array<string>;
+  };
 };
 
 export type TTestState = {
-  aTCPClient: ExtendedSocket | null;
-  forwarder: MyLapsForwarder | null;
-  fromServerMessages: Array<string>;
-  socketCache: {
-    lastTime: number;
-    buffer: Buffer;
+  myLaps: {
+    aTCPClient: ExtendedSocket | null;
+    forwarder: MyLapsForwarder | null;
+    fromServiceMessages: Array<string>;
+    socketCache: {
+      lastTime: number;
+      buffer: Buffer;
+    };
+    passingAttempts: Array<string>;
   };
-  passingAttempts: Array<string>;
+  chronoTrack: {
+    aTCPClient: ExtendedSocket | null;
+    forwarder: ChronoTrackForwarder | null;
+    fromServiceMessages: Array<string>;
+    socketCache: {
+      lastTime: number;
+      buffer: Buffer;
+    };
+  };
 };
