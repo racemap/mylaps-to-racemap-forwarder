@@ -2,6 +2,8 @@ import { ToRacemapForwarderVersion } from '../../version';
 
 export const MyLapsPrefix = 'MyLaps_'; // MyLaps prefix for the transponder or chipIds
 
+export const MAX_MESSAGE_DATA_DELAY_IN_MS = 500;
+
 export const MyLapsFunctions = {
   Pong: 'Pong',
   AckPong: 'AckPong',
@@ -83,5 +85,5 @@ export const MyLapsIdentifiers = {
 
 export const RacemapMyLapsServerName = `MyLaps2RMServer_${ToRacemapForwarderVersion.gitTag.split('_')[0]}`; // RACEMAP MyLaps server name
 
-export const CRLF = '$'; // special character to separate messages in MyLaps TCP IP protocol
+export const MyLapsFrameTerminator = '$'; // special character to separate messages in MyLaps TCP IP protocol
 export const MyLapsDataSeparator = '@'; // special character to separate data in MyLaps TCP IP protocol

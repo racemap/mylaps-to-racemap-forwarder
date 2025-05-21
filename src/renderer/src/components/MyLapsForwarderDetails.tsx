@@ -1,9 +1,9 @@
 import { Table } from 'antd';
-import type { ForwarderState } from '../../../types';
+import type { MyLapsForwarderState } from '../../../types';
 import styled from 'styled-components';
 
 type MyLapsForwarderDetailsProps = {
-  forwarderState: ForwarderState;
+  forwarderState: MyLapsForwarderState;
 };
 
 export const MyLapsForwarderDetails = ({ forwarderState }: MyLapsForwarderDetailsProps) => {

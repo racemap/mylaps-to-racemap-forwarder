@@ -1,21 +1,20 @@
 import moment from 'moment';
+import APIClient from '../src/main/api-client';
 import MyLapsForwarder from '../src/main/mylaps/forwarder';
 import { serial as test } from 'ava';
 import type { TTestState, TTestFixtures, TPredictionTestTimes } from '../src/types';
 import { OneHourInMillis, OneSecondInMillis } from '../src/consts';
+import { myLapsLagacyPassingToRead, myLapsPassingToRead } from '../src/main/mylaps/functions';
+import { MyLapsFrameTerminator, MyLapsDataSeparator, MyLapsFunctions, MyLapsIdentifiers, MyLapsPrefix } from '../src/main/mylaps/consts';
 import {
   sleep,
   isPortInUse,
   shortIdBuilder,
   connectTcpSocket,
   processStoredData,
-  myLapsPassingToRead,
   storeIncomingRawData,
-  myLapsLagacyPassingToRead,
   removeCertainBytesFromBuffer,
 } from '../src/main/functions';
-import { CRLF, MyLapsDataSeparator, MyLapsFunctions, MyLapsIdentifiers, MyLapsPrefix } from '../src/main/mylaps/consts';
-import APIClient from '../src/main/api-client';
 
 const RACEMAP_API_HOST = process.env.RACEMAP_API_HOST ?? 'https://racemap.com';
 const RACEMAP_API_TOKEN = process.env.RACEMAP_API_TOKEN ?? '';
@@ -37,7 +36,7 @@ const fixtures: TTestFixtures = {
   id: shortId001,
   clientName: 'RMMyLabsTestClient',
   trasnponderIds: ['0000041', '0000042', '0000043'],
-  locations: [
+  myLapsLocations: [
     {
       name: 'Start',
       locationName: `Dev_${shortIdBuilder()}`,
@@ -181,7 +180,7 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
   if (state.aTCPClient != null) {
     state.aTCPClient.sendFrame = (text: string) => {
       if (state.aTCPClient != null) {
-        return state.aTCPClient.write(`${text}${CRLF}`);
+        return state.aTCPClient.write(`${text}${MyLapsFrameTerminator}`);
       }
       return false;
     };
@@ -200,76 +199,80 @@ test(`should connect to tcp://${forwarderIPAddress}:${LISTEN_PORT}`, async (t) =
 
     state.aTCPClient.on('data', (data: Buffer) => {
       storeIncomingRawData(data, state.socketCache);
-      processStoredData(state.socketCache, (message) => {
-        if (state.aTCPClient == null) return;
-        const messageStr = message.toString();
-        state.fromServerMessages.push(messageStr);
-        const parts = messageStr.split(MyLapsDataSeparator);
-        const len = parts.length;
-        if (len > 2) {
-          const serverName = parts[0];
-          const myLabsFunction = parts[1];
+      processStoredData(
+        state.socketCache,
+        (message) => {
+          if (state.aTCPClient == null) return;
+          const messageStr = message.toString();
+          state.fromServerMessages.push(messageStr);
+          const parts = messageStr.split(MyLapsDataSeparator);
+          const len = parts.length;
+          if (len > 2) {
+            const serverName = parts[0];
+            const myLabsFunction = parts[1];
 
-          switch (myLabsFunction) {
-            case MyLapsFunctions.Pong: {
-              t.log('Pong from server => AckPong');
-              state.aTCPClient.sendData([fixtures.clientName, MyLapsFunctions.AckPong]);
-              break;
-            }
-
-            case MyLapsFunctions.Ping: {
-              t.log('Ping from server => AckPing');
-              state.aTCPClient.sendData([fixtures.clientName, MyLapsFunctions.AckPing]);
-              break;
-            }
-
-            case MyLapsFunctions.GetLocations: {
-              t.log('GetLocations from server => GetLocations');
-              const data = [fixtures.clientName, MyLapsFunctions.GetLocations];
-              for (const location of fixtures.locations) {
-                data.push(`${MyLapsIdentifiers.LocationParameters.LocationName}=${location.name}`);
+            switch (myLabsFunction) {
+              case MyLapsFunctions.Pong: {
+                t.log('Pong from server => AckPong');
+                state.aTCPClient.sendData([fixtures.clientName, MyLapsFunctions.AckPong]);
+                break;
               }
-              state.aTCPClient?.sendData(data);
-              break;
-            }
 
-            case MyLapsFunctions.GetInfo: {
-              t.log('GetInfo from server => AckGetInfo');
-              // if it request an explicit location we only answer for this
-              for (const location of fixtures.locations) {
-                state.aTCPClient?.sendData([
-                  location.name,
-                  MyLapsFunctions.AckGetInfo,
-                  location.locationName ?? '',
-                  'Unknown',
-                  location.computerName,
-                ]);
+              case MyLapsFunctions.Ping: {
+                t.log('Ping from server => AckPing');
+                state.aTCPClient.sendData([fixtures.clientName, MyLapsFunctions.AckPing]);
+                break;
               }
-              break;
-            }
 
-            case MyLapsFunctions.AckPong: {
-              t.log('AckPong from server. Nice.');
-              break;
-            }
+              case MyLapsFunctions.GetLocations: {
+                t.log('GetLocations from server => GetLocations');
+                const data = [fixtures.clientName, MyLapsFunctions.GetLocations];
+                for (const location of fixtures.myLapsLocations) {
+                  data.push(`${MyLapsIdentifiers.LocationParameters.LocationName}=${location.name}`);
+                }
+                state.aTCPClient?.sendData(data);
+                break;
+              }
 
-            case MyLapsFunctions.AckPassing: {
-              t.log('AckPassing from server. Nice.');
-              break;
-            }
+              case MyLapsFunctions.GetInfo: {
+                t.log('GetInfo from server => AckGetInfo');
+                // if it request an explicit location we only answer for this
+                for (const location of fixtures.myLapsLocations) {
+                  state.aTCPClient?.sendData([
+                    location.name,
+                    MyLapsFunctions.AckGetInfo,
+                    location.locationName ?? '',
+                    'Unknown',
+                    location.computerName,
+                  ]);
+                }
+                break;
+              }
 
-            case MyLapsFunctions.AckMarker: {
-              t.log('AckMarker from server. Nice.');
-              break;
-            }
+              case MyLapsFunctions.AckPong: {
+                t.log('AckPong from server. Nice.');
+                break;
+              }
 
-            default: {
-              console.warn(`MyLabsTestClient Unknown command from server. ${myLabsFunction}`);
-              break;
+              case MyLapsFunctions.AckPassing: {
+                t.log('AckPassing from server. Nice.');
+                break;
+              }
+
+              case MyLapsFunctions.AckMarker: {
+                t.log('AckMarker from server. Nice.');
+                break;
+              }
+
+              default: {
+                console.warn(`MyLabsTestClient Unknown command from server. ${myLabsFunction}`);
+                break;
+              }
             }
           }
-        }
-      });
+        },
+        MyLapsFrameTerminator,
+      );
     });
   }
 });
@@ -301,7 +304,7 @@ test('it should be possible to send 3 passings for every location to the server'
   t.not(state.aTCPClient, null, 'tcp client is not null');
   if (state.aTCPClient != null) {
     // for every location we define 3 passings
-    for (const location of fixtures.locations) {
+    for (const location of fixtures.myLapsLocations) {
       const Attempt = Math.round(100 * Math.random()).toString();
       const passings = [location.name, MyLapsFunctions.Passing];
       for (let i = 0; i < 3; i++) {
@@ -345,7 +348,7 @@ test('it should be possibel to send 3 markers to the server', async (t) => {
   if (state.aTCPClient != null) {
     const attempt = Math.round(100 * Math.random()).toString();
     const marker = [
-      fixtures.locations[0].name,
+      fixtures.myLapsLocations[0].name,
       MyLapsFunctions.Marker,
       [
         `${MyLapsIdentifiers.MarkerParameters.Time}=11:03:40.347`,

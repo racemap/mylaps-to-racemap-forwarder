@@ -4,24 +4,18 @@ import shortId from 'shortid';
 import type APIClient from '../api-client';
 import { BaseClass } from '../base-class';
 import { updateServerState } from '../state';
-import type { TimingRead, MessageParts, MyLapsDevice, ExtendedSocket, ForwarderState, LocationUpdate, MyLapsLocation } from '../../types';
-import { CRLF, MyLapsFunctions, MyLapsIdentifiers, MyLapsDataSeparator, RacemapMyLapsServerName } from './consts';
+import type { TimingRead, MessageParts, LocationUpdate } from '../../types';
+import type { MyLapsDevice, MyLapsExtendedSocket, MyLapsForwarderState, MyLapsLocation } from './types';
+import { myLapsDeviceToObject, myLapsLagacyPassingToRead, myLapsMarkerToRead, myLapsPassingToRead } from './functions';
+import { log, info, warn, error, success, processStoredData, storeIncomingRawData, removeCertainBytesFromBuffer } from '../functions';
 import {
-  log,
-  info,
-  warn,
-  error,
-  success,
-  processStoredData,
-  myLapsMarkerToRead,
-  myLapsPassingToRead,
-  storeIncomingRawData,
-  myLapsDeviceToObject,
-  myLapsLagacyPassingToRead,
-  removeCertainBytesFromBuffer,
-} from '../functions';
-
-const MAX_MESSAGE_DATA_DELAY_IN_MS = 500;
+  MyLapsFunctions,
+  MyLapsIdentifiers,
+  MyLapsDataSeparator,
+  MyLapsFrameTerminator,
+  RacemapMyLapsServerName,
+  MAX_MESSAGE_DATA_DELAY_IN_MS,
+} from './consts';
 
 const logToFileSystem = (message: Buffer | string, fromClient = true) => {
   fs.appendFileSync('./MyLapsInputAdapter.log', `${new Date().toISOString()} ${fromClient ? '» from' : '« to  '} client: ${message}\n`);
@@ -34,7 +28,7 @@ const clearIntervalTimer = (timerHandle: NodeJS.Timeout | null) => {
 };
 
 class MyLapsForwarder extends BaseClass {
-  _connections: Map<string, ExtendedSocket> = new Map();
+  _connections: Map<string, MyLapsExtendedSocket> = new Map();
   _server: net.Server;
   _listenHost: string;
   _listenPort: number;
@@ -52,7 +46,7 @@ class MyLapsForwarder extends BaseClass {
     this.updateElectronState();
   }
 
-  getForwarderState = (): ForwarderState => {
+  getForwarderState = (): MyLapsForwarderState => {
     const connections = Array.from(this._connections.values()).map((socket) => ({
       id: socket.id,
       userId: socket.userId,
@@ -97,7 +91,7 @@ class MyLapsForwarder extends BaseClass {
     return server;
   };
 
-  _onNewConnection = (socket: ExtendedSocket): void => {
+  _onNewConnection = (socket: MyLapsExtendedSocket): void => {
     log(`${this.className}Socket.onNewConnection`);
 
     socket.id = shortId.generate();
@@ -148,9 +142,13 @@ class MyLapsForwarder extends BaseClass {
     socket.on('data', (data: Buffer) => {
       try {
         storeIncomingRawData(removeCertainBytesFromBuffer([0x00, 0x0a, 0x0d], data), socket.cache, MAX_MESSAGE_DATA_DELAY_IN_MS);
-        processStoredData(socket.cache, (message) => {
-          this._handleRawMessage(socket, message);
-        });
+        processStoredData(
+          socket.cache,
+          (message) => {
+            this._handleRawMessage(socket, message);
+          },
+          MyLapsFrameTerminator,
+        );
       } catch (e) {
         warn(`${this.className}Socket.onData ParserError`, data, e);
       }
@@ -158,8 +156,8 @@ class MyLapsForwarder extends BaseClass {
 
     socket.sendFrame = (text: string) => {
       log('Socket.sendFrame', text);
-      logToFileSystem(text + CRLF, false);
-      return socket.write(text + CRLF);
+      logToFileSystem(text + MyLapsFrameTerminator, false);
+      return socket.write(text + MyLapsFrameTerminator);
     };
 
     socket.sendData = (data: Array<string>) => socket.sendFrame(data.join(MyLapsDataSeparator) + MyLapsDataSeparator);
@@ -181,7 +179,7 @@ class MyLapsForwarder extends BaseClass {
     }, 10000);
   };
 
-  _handleRawMessage = (socket: ExtendedSocket, rawMessage: Buffer): void => {
+  _handleRawMessage = (socket: MyLapsExtendedSocket, rawMessage: Buffer): void => {
     if (rawMessage != null) {
       try {
         logToFileSystem(rawMessage);
@@ -207,7 +205,7 @@ class MyLapsForwarder extends BaseClass {
     }
   };
 
-  _handleWelcomeMessage = (refToSocket: ExtendedSocket, parts: MessageParts): void => {
+  _handleWelcomeMessage = (refToSocket: MyLapsExtendedSocket, parts: MessageParts): void => {
     // we assume a client version of 2.1
     if (parts.length === 3 && (parts[1] === MyLapsFunctions.Ping || parts[1] === MyLapsFunctions.Pong)) {
       refToSocket.identified = true;
@@ -235,7 +233,7 @@ class MyLapsForwarder extends BaseClass {
     this.updateElectronState();
   };
 
-  _createOrUpdateLocation = (refToSocket: ExtendedSocket, update: LocationUpdate): void => {
+  _createOrUpdateLocation = (refToSocket: MyLapsExtendedSocket, update: LocationUpdate): void => {
     let location = refToSocket.meta.locations[update.locationName];
     if (location == null) {
       success(`${this.className}._createOrUpdateLocation`, 'New location detected: ', update.locationName);
@@ -262,7 +260,7 @@ class MyLapsForwarder extends BaseClass {
 
   // When the incoming stream is:  Toolkit@GetLocations@ln=Start@ln=5K@ln=Finish@$
   // The parts are: [Toolkit, GetLocations, ln=Start, ln=5K, ln=Finish]
-  _handleMessages = (refToSocket: ExtendedSocket, parts: MessageParts): void => {
+  _handleMessages = (refToSocket: MyLapsExtendedSocket, parts: MessageParts): void => {
     if (['v1.0', 'v2.1'].includes(refToSocket.meta.version)) {
       const len = parts.length;
       if (len > 1) {

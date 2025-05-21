@@ -17,6 +17,7 @@ import {
   prepareServerState,
   selectRacemapEvent,
 } from './state';
+import ChronoTrackForwarder from './chronoTrack/forwarder';
 
 async function bootup(mainWindow: BrowserWindow) {
   log('Hello from 2-racemap-forwarder');
@@ -24,13 +25,15 @@ async function bootup(mainWindow: BrowserWindow) {
   const RACEMAP_API_HOST = process.env.RCEMAP_API_HOST ?? 'https://racemap.com';
   const RACEMAP_API_TOKEN = serverState.apiToken ?? '';
   const LISTEN_MODE = process.env.LISTEN_MODE?.toLocaleLowerCase() ?? 'private';
-  const LISTEN_PORT = Number.parseInt(process.env.LISTEN_PORT ?? '3097');
+  const MYLAPS_LISTEN_PORT = Number.parseInt(process.env.LISTEN_PORT ?? '3097');
+  const CHRONO_LISTEN_PORT = Number.parseInt(process.env.LISTEN_PORT ?? '3000');
   const VERSION = ToRacemapForwarderVersion.gitTag.split('_')[0];
 
   printEnvVar({ RACEMAP_API_HOST });
   printEnvVar({ RACEMAP_API_TOKEN });
   printEnvVar({ LISTEN_MODE });
-  printEnvVar({ LISTEN_PORT });
+  printEnvVar({ MYLAPS_LISTEN_PORT });
+  printEnvVar({ CHRONO_LISTEN_PORT });
   printEnvVar({ VERSION });
 
   info('Check LISTEN_MODE');
@@ -41,7 +44,8 @@ async function bootup(mainWindow: BrowserWindow) {
   prepareLogger(mainWindow.webContents);
   prepareServerState(mainWindow.webContents);
 
-  new MyLapsForwarder(apiClient, LISTEN_PORT, LISTEN_MODE === 'private');
+  new MyLapsForwarder(apiClient, MYLAPS_LISTEN_PORT, LISTEN_MODE === 'private');
+  new ChronoTrackForwarder(apiClient, CHRONO_LISTEN_PORT, LISTEN_MODE === 'private');
 }
 
 const appIcon = {
